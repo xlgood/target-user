@@ -82,7 +82,7 @@
                 class="theme-btn-inline-md border theme-btn-secondary disabled:opacity-60">
                 {{ t('payment.refreshStatus') }}
               </button>
-              <button @click="resetPayment"
+              <button @click="handleChangePaymentMethod"
                 class="theme-btn-inline-md border theme-btn-secondary">
                 {{ t('payment.changeMethod') }}
               </button>
@@ -532,6 +532,12 @@ import { debounceAsync } from '../utils/debounce'
 import { copyText } from '../utils/clipboard'
 import { amountToCents, basisPointsToPercent, calculateFeeCents, centsToAmount, rateToBasisPoints } from '../utils/money'
 import { buildSkuDisplayTextFromSnapshot } from '../utils/sku'
+import {
+  getCachedPaymentRestorePolicy,
+  getPaymentResetPolicy,
+  shouldAutoOpenPaymentLink,
+  type PaymentResetReason,
+} from '../utils/paymentResumePolicy'
 import PaymentAmountBreakdown from '../components/payment/PaymentAmountBreakdown.vue'
 import PaymentChannelSelector from '../components/payment/PaymentChannelSelector.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -1331,8 +1337,7 @@ const loadLatestPayment = async () => {
       void captureCurrentPayment({ silent: true })
       startCountdown()
       // 对 redirect 模式自动打开支付链接
-      const mode = String(data.interaction_mode || '').toLowerCase()
-      if (mode === 'redirect' && data.pay_url) {
+      if (shouldAutoOpenPaymentLink(data)) {
         openPayLinkInCompatibleWindow()
       }
     }
@@ -1561,8 +1566,7 @@ const performPayment = async () => {
       await loadWallet()
     }
     window.scrollTo({ top: 0, behavior: 'smooth' })
-    const mode = String(paymentResult.value?.interaction_mode || '').toLowerCase()
-    if (mode === 'redirect' && payLink.value) {
+    if (shouldAutoOpenPaymentLink(paymentResult.value)) {
       openPayLinkInCompatibleWindow()
     }
   } catch (err: any) {
@@ -1628,18 +1632,27 @@ const redirectToOrderDetail = () => {
   }, 600)
 }
 
-const resetPayment = () => {
+const resetPayment = (reason: PaymentResetReason = 'generic') => {
+  const resetPolicy = getPaymentResetPolicy(reason)
+  if (resetPolicy.stopActivePaymentWatch) {
+    stopPolling()
+    stopCountdown()
+    debouncedLoadOrder.cancel()
+  }
   paymentResult.value = null
   error.value = ''
   openedPayWindow.value = false
   resetRedirectState()
-  latestLoaded.value = false
+  latestLoaded.value = !resetPolicy.resumeLatestPayment
+  if (resetPolicy.clearSelectedChannel) {
+    selectedChannelId.value = null
+  }
 }
 
 const resetPaymentRouteState = () => {
   stopPolling()
   stopCountdown()
-  resetPayment()
+  resetPayment('route_change')
   cachedPayment.value = null
   selectedChannelId.value = null
   order.value = null
@@ -1649,10 +1662,23 @@ const resetPaymentRouteState = () => {
 
 const restoreCachedPayment = () => {
   if (!cachedPayment.value) return
+  const restorePolicy = getCachedPaymentRestorePolicy()
   paymentResult.value = cachedPayment.value
   selectedChannelId.value = cachedPayment.value.channel_id || null
   openedPayWindow.value = false
+  if (restorePolicy.startActivePaymentWatch) {
+    startPolling()
+    void captureCurrentPayment({ silent: true })
+    startCountdown()
+  }
+  if (restorePolicy.autoOpenPayLink && shouldAutoOpenPaymentLink(paymentResult.value)) {
+    openPayLinkInCompatibleWindow()
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const handleChangePaymentMethod = () => {
+  resetPayment('change_payment_method')
 }
 
 const formatDate = (raw?: string) => {
