@@ -6,7 +6,14 @@
         <!-- Brand -->
         <div class="col-span-2 space-y-6">
           <div class="flex items-center space-x-3">
+            <img
+              v-if="brandLogo"
+              :src="brandLogo"
+              :alt="brandSiteName"
+              class="h-9 max-w-[180px] object-contain"
+            />
             <div
+              v-else
               class="w-8 h-8 theme-btn-primary rounded-lg flex items-center justify-center">
               <span class="text-white font-black text-sm">{{ brandInitial }}</span>
             </div>
@@ -114,6 +121,8 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '../stores/app'
+import { getImageUrl } from '../utils/image'
+import { getLocalizedText } from '../utils/resellerSiteConfig'
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -136,6 +145,11 @@ const brandDescription = computed(() => {
 
 const brandInitial = computed(() => {
   return brandSiteName.value.charAt(0).toUpperCase()
+})
+
+const brandLogo = computed(() => {
+  const raw = String(config.value?.brand?.site_logo || '').trim()
+  return raw ? getImageUrl(raw) : ''
 })
 
 const isListMode = computed(() => config.value?.template_mode === 'list')
@@ -161,7 +175,12 @@ const quickLinks = computed(() => {
 const footerLinks = computed(() => {
   const links = config.value?.footer_links
   if (!Array.isArray(links)) return []
-  return links.filter((item: any) => item && typeof item.name === 'string' && item.name.trim())
+  return links
+    .map((item: any) => ({
+      name: typeof item?.name === 'string' ? item.name.trim() : getLocalizedText(item?.name, appStore.locale),
+      url: String(item?.url || '').trim(),
+    }))
+    .filter((item) => item.name)
 })
 
 const currentYear = new Date().getFullYear()

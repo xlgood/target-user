@@ -134,6 +134,8 @@
       </template>
     </div>
 
+    <ResellerSiteConfigPanel v-if="managementState.canSubmitDomain" />
+
     <div class="theme-personal-card">
       <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -460,6 +462,7 @@ import {
   RESELLER_WITHDRAW_STATUS_REJECTED,
 } from '../../constants/reseller'
 import { pageAlertClass, type PageAlert } from '../../utils/alerts'
+import ResellerSiteConfigPanel from '../../components/reseller/ResellerSiteConfigPanel.vue'
 import {
   getResellerFinanceStatusView,
   getResellerLedgerTypeKey,

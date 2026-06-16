@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { configAPI } from '../api'
 import { applyCustomScripts } from '../utils/customScripts'
 import { getImageUrl } from '../utils/image'
+import { getLocalizedText } from '../utils/resellerSiteConfig'
 import { detectLocale } from '../i18n'
 import { useHead } from '@unhead/vue'
 
@@ -33,7 +34,7 @@ export const useAppStore = defineStore('app', () => {
         title: () => {
             const seo = config.value?.seo
             const lang = locale.value
-            const localized = seo?.title?.[lang]
+            const localized = getLocalizedText(seo?.title, lang)
             if (localized) return String(localized).trim() || undefined
             const siteName = String(config.value?.brand?.site_name || '').trim()
             return siteName || undefined
@@ -44,11 +45,13 @@ export const useAppStore = defineStore('app', () => {
             if (!seo) return []
             const lang = locale.value
             const tags: Array<{ name?: string; property?: string; content: string }> = []
-            if (seo.keywords && seo.keywords[lang]) {
-                tags.push({ name: 'keywords', content: String(seo.keywords[lang]) })
+            const keywords = getLocalizedText(seo.keywords, lang)
+            if (keywords) {
+                tags.push({ name: 'keywords', content: keywords })
             }
-            if (seo.description && seo.description[lang]) {
-                tags.push({ name: 'description', content: String(seo.description[lang]) })
+            const description = getLocalizedText(seo.description, lang)
+            if (description) {
+                tags.push({ name: 'description', content: description })
             }
             return tags
         }

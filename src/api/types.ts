@@ -236,6 +236,57 @@ export interface ResellerCustomDomainPayload {
     domain: string
 }
 
+export interface ResellerLocalizedText {
+    'zh-CN': string
+    'zh-TW': string
+    'en-US': string
+}
+
+export interface ResellerSiteConfigPayload {
+    site_name: string
+    logo?: string
+    favicon?: string
+    announcement?: {
+        enabled: boolean
+        type: string
+        title: ResellerLocalizedText
+        content: ResellerLocalizedText
+    }
+    support?: {
+        telegram?: string
+        whatsapp?: string
+        email?: string
+        support_url?: string
+    }
+    seo?: {
+        title: ResellerLocalizedText
+        keywords: ResellerLocalizedText
+        description: ResellerLocalizedText
+        default_og_image?: string
+    }
+    footer_links?: Array<{ name: ResellerLocalizedText; url: string }>
+    nav_config?: {
+        builtin: Record<string, boolean>
+        custom_items: Array<{ name: ResellerLocalizedText; url: string }>
+    }
+    theme?: {
+        primary_color?: string
+        accent_color?: string
+        surface_color?: string
+    }
+}
+
+export interface ResellerSiteConfigData extends ResellerSiteConfigPayload {
+    id: number
+    updated_at: string
+}
+
+export interface ResellerSiteConfigSnapshotData {
+    opened: boolean
+    can_edit: boolean
+    config?: ResellerSiteConfigData
+}
+
 export interface ResellerBalanceData {
     id: number
     currency: string

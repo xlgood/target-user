@@ -6,7 +6,13 @@
     <div class="container mx-auto px-4 flex items-center justify-between gap-4">
       <!-- Logo -->
       <router-link to="/" class="theme-wordmark group relative" :title="brandSiteName">
-        <span class="theme-wordmark-text">{{ brandSiteName }}</span>
+        <img
+          v-if="brandLogo"
+          :src="brandLogo"
+          :alt="brandSiteName"
+          class="h-8 max-w-[180px] object-contain"
+        />
+        <span v-else class="theme-wordmark-text">{{ brandSiteName }}</span>
       </router-link>
 
       <!-- Desktop Menu -->
@@ -224,6 +230,7 @@ import { useAppStore } from '../stores/app'
 import { useCartStore } from '../stores/cart'
 import { useUserAuthStore } from '../stores/userAuth'
 import { useTheme } from '../utils/theme'
+import { getImageUrl } from '../utils/image'
 import { SunIcon, MoonIcon } from '@heroicons/vue/24/outline'
 
 const { t, locale } = useI18n()
@@ -258,13 +265,13 @@ interface NavItem {
 const navConfig = computed(() => appStore.config?.nav_config as {
   builtin?: Record<string, boolean>
   custom_items?: Array<{
-    id: number; title: Record<string, string>; link_type: string
-    url: string; target: string; sort_order: number; enabled: boolean; icon?: string
+    id?: number; title?: Record<string, string>; name?: Record<string, string>; link_type?: string
+    url: string; target?: string; sort_order?: number; enabled?: boolean; icon?: string
   }>
 } | undefined)
 
-const getCustomItemTitle = (item: { title?: Record<string, string> }): string => {
-  const titles = item.title || {}
+const getCustomItemTitle = (item: { title?: Record<string, string>; name?: Record<string, string> }): string => {
+  const titles = item.title || item.name || {}
   return titles[locale.value] || titles['zh-CN'] || titles['en-US'] || ''
 }
 
@@ -291,16 +298,16 @@ const buildCustomNavItems = (): NavItem[] => {
   const items = navConfig.value?.custom_items
   if (!Array.isArray(items)) return []
   return items
-    .filter((item) => item.enabled)
+    .filter((item) => item.enabled !== false)
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-    .map((item) => {
+    .map((item, index) => {
       const icon = (presetIcons[item.icon as string] || defaultIcon) as string
       return {
-        key: `custom-${item.id}`,
+        key: `custom-${item.id || index}`,
         path: item.url || '',
         label: getCustomItemTitle(item),
         icon,
-        type: item.link_type === 'external' ? 'link' as const : 'route' as const,
+        type: item.link_type === 'internal' ? 'route' as const : 'link' as const,
         target: item.target || '_self',
       }
     })
@@ -352,6 +359,11 @@ const cartCount = computed(() => cartStore.totalItems)
 const brandSiteName = computed(() => {
   const text = String(appStore.config?.brand?.site_name || '').trim()
   return text !== '' ? text : 'Dujiao-Next'
+})
+
+const brandLogo = computed(() => {
+  const raw = String(appStore.config?.brand?.site_logo || '').trim()
+  return raw ? getImageUrl(raw) : ''
 })
 
 const toggleMobileMenu = () => {
