@@ -16,6 +16,11 @@ export const resellerAPI = {
     submitDomain: (data: ResellerCustomDomainPayload) => userApi.post('/reseller/domains', data),
     siteConfig: () => userApi.get('/reseller/site-config'),
     updateSiteConfig: (data: ResellerSiteConfigPayload) => userApi.put('/reseller/site-config', data),
+    uploadImage: (file: File) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return userApi.post('/reseller/upload', formData)
+    },
     productSettings: (params?: any) => userApi.get('/reseller/product-settings', { params }),
     productSettingDetail: (productId: number) => userApi.get(`/reseller/product-settings/${productId}`),
     updateProductSettings: (productId: number, data: ResellerProductSettingUpdatePayload) =>
