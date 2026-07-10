@@ -50,7 +50,9 @@
         :order="order"
         variant="user"
         :fulfillment-downloading="fulfillmentDownloading"
+        :fulfillment-retrying="fulfillmentRetrying"
         @download="handleDownloadFulfillment"
+        @retry="handleRetryFulfillment"
       />
     </template>
   </div>
@@ -68,6 +70,7 @@ const { t } = useI18n()
 
 const {
   loading, order, debouncedLoadOrder, cancelOrder, fulfillmentDownloading, handleDownloadFulfillment,
+  fulfillmentRetrying, handleRetryFulfillment,
   statusLabel, statusVariant, formatDate, formatMoney,
 } = useOrderDetail()
 </script>

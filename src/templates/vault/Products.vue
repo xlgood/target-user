@@ -89,6 +89,7 @@ import { useProductList } from '../../composables/useProductList'
 import { usePageSeo } from '../../composables/usePageSeo'
 import { useLocalized } from '../../composables/useProduct'
 import type { PublicCategory } from '../../utils/category'
+import { routeBaseName } from '../../utils/routeNames'
 import VaultProductCard from './components/VaultProductCard.vue'
 import VaultCategorySidebar from './components/VaultCategorySidebar.vue'
 import ProductQuickBuy from '../../components/ProductQuickBuy.vue'
@@ -131,7 +132,7 @@ const selectedCategoryName = computed(() => {
 })
 
 const pageTitle = computed(() => {
-  if (route.name === 'category-products') return selectedCategoryName.value || t('nav.products')
+  if (routeBaseName(route.name) === 'category-products') return selectedCategoryName.value || t('nav.products')
   return t('nav.products')
 })
 

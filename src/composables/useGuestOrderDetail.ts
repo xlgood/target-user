@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { guestOrderAPI } from '../api'
 import { debounceAsync } from '../utils/debounce'
 import { useOrderDisplayHelpers } from './useOrderDisplayHelpers'
+import { toast } from './useToast'
 
 /**
  * 游客订单详情逻辑（classic + vault 共用）。
@@ -21,6 +22,7 @@ export function useGuestOrderDetail() {
     order_password: '',
   })
   const fulfillmentDownloading = ref(false)
+  const fulfillmentRetrying = ref(false)
 
   const helpers = useOrderDisplayHelpers(order)
 
@@ -97,6 +99,23 @@ export function useGuestOrderDetail() {
     await debouncedLoadOrder()
   }
 
+  const handleRetryFulfillment = async () => {
+    if (!order.value || fulfillmentRetrying.value || !hasAuth.value) return
+    fulfillmentRetrying.value = true
+    try {
+      const response = await guestOrderAPI.retryFulfillment(order.value.order_no, {
+        email: auth.value.email,
+        order_password: auth.value.order_password,
+      })
+      order.value = response.data.data
+      toast.success(t('orderDetail.fulfillmentRetrySuccess'))
+    } catch {
+      toast.error(t('orderDetail.fulfillmentRetryFailed'))
+    } finally {
+      fulfillmentRetrying.value = false
+    }
+  }
+
   const clearAuth = () => {
     localStorage.removeItem('guest_order_auth')
     auth.value = { email: '', order_password: '' }
@@ -127,6 +146,8 @@ export function useGuestOrderDetail() {
     clearAuth,
     fulfillmentDownloading,
     handleDownloadFulfillment,
+    fulfillmentRetrying,
+    handleRetryFulfillment,
     ...helpers,
   }
 }

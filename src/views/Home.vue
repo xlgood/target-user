@@ -360,6 +360,7 @@ import { useProductList } from '../composables/useProductList'
 import { useProductListGroups } from '../composables/useProductListGroups'
 import { usePageSeo } from '../composables/usePageSeo'
 import { useAppStore } from '../stores/app'
+import { routeBaseName } from '../utils/routeNames'
 import ProductCard from '../components/ProductCard.vue'
 import ProductListItem from '../components/ProductListItem.vue'
 import ProductQuickBuy from '../components/ProductQuickBuy.vue'
@@ -454,10 +455,11 @@ const seoCategoryName = computed(() => {
 usePageSeo({
   canonicalPath: () => route.path,
   title: () => {
-    if (route.name === 'category-products') {
+    const name = routeBaseName(route.name)
+    if (name === 'category-products') {
       return seoCategoryName.value || t('nav.products')
     }
-    if (route.name === 'products') return t('nav.products')
+    if (name === 'products') return t('nav.products')
     return undefined
   },
 })

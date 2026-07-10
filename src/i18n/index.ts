@@ -1598,12 +1598,20 @@ const messages = {
                 pending: '待交付',
                 delivered: '已交付',
             },
+            fulfillmentErrors: {
+                provider_submit_temporarily_unavailable: '当前服务繁忙，本次提交未完成。请稍后重试或联系客服处理。',
+                default: '本次交付暂时未能完成，请稍后重试或联系客服处理。',
+            },
             fulfillmentCopy: '复制内容',
             fulfillmentCopied: '已复制',
             fulfillmentDownload: '下载交付内容',
             fulfillmentTotalLines: '共 {count} 条交付内容',
             fulfillmentDownloading: '下载中...',
             fulfillmentTruncatedHint: '当前仅显示前 100 条预览，请下载获取完整交付内容',
+            fulfillmentRetry: '重新提交',
+            fulfillmentRetrying: '提交中...',
+            fulfillmentRetrySuccess: '已重新提交，请稍后刷新查看结果。',
+            fulfillmentRetryFailed: '重新提交失败，请稍后再试或联系客服处理。',
         },
         guestOrders: {
             title: '游客订单查询',
@@ -3332,12 +3340,20 @@ const messages = {
                 pending: '待交付',
                 delivered: '已交付',
             },
+            fulfillmentErrors: {
+                provider_submit_temporarily_unavailable: '目前服務繁忙，本次提交未完成。請稍後重試或聯絡客服處理。',
+                default: '本次交付暫時未能完成，請稍後重試或聯絡客服處理。',
+            },
             fulfillmentCopy: '複製內容',
             fulfillmentCopied: '已複製',
             fulfillmentDownload: '下載交付內容',
             fulfillmentTotalLines: '共 {count} 條交付內容',
             fulfillmentDownloading: '下載中...',
             fulfillmentTruncatedHint: '當前僅顯示前 100 條預覽，請下載獲取完整交付內容',
+            fulfillmentRetry: '重新提交',
+            fulfillmentRetrying: '提交中...',
+            fulfillmentRetrySuccess: '已重新提交，請稍後刷新查看結果。',
+            fulfillmentRetryFailed: '重新提交失敗，請稍後再試或聯絡客服處理。',
         },
         guestOrders: {
             title: '遊客訂單查詢',
@@ -4613,7 +4629,7 @@ const messages = {
             qrTitle: 'Scan to pay',
             qrTip: 'Open your payment app and scan to complete payment.',
             redirectTitle: 'Redirect to pay',
-            redirectTip: 'Open the payment link and complete payment on the provider page.',
+            redirectTip: 'Open the payment link and complete payment on the secure payment page.',
             qrFallbackHint: 'This channel returned a payment link. A scannable QR code was generated automatically.',
             expiresAt: 'Expires at',
             countdownLabel: 'Time left',
@@ -5019,12 +5035,20 @@ const messages = {
                 pending: 'Pending',
                 delivered: 'Delivered',
             },
+            fulfillmentErrors: {
+                provider_submit_temporarily_unavailable: 'The service is busy right now, so this submission could not be completed. Please try again later or contact support.',
+                default: 'This fulfillment could not be completed right now. Please try again later or contact support.',
+            },
             fulfillmentCopy: 'Copy',
             fulfillmentCopied: 'Copied',
             fulfillmentDownload: 'Download',
             fulfillmentTotalLines: '{count} items in total',
             fulfillmentDownloading: 'Downloading...',
             fulfillmentTruncatedHint: 'Showing first 100 items only. Please download for full content.',
+            fulfillmentRetry: 'Retry submission',
+            fulfillmentRetrying: 'Submitting...',
+            fulfillmentRetrySuccess: 'Submission retried. Please refresh later to check the result.',
+            fulfillmentRetryFailed: 'Retry failed. Please try again later or contact support.',
         },
         guestOrders: {
             title: 'Guest Order Lookup',
@@ -5067,12 +5091,20 @@ const messages = {
 
 const supportedLocales = ['zh-CN', 'zh-TW', 'en-US']
 
+export function isSupportedLocale(locale: string): boolean {
+    return supportedLocales.includes(locale)
+}
+
+export function hasSavedLocale(): boolean {
+    return isSupportedLocale(localStorage.getItem('locale') || '')
+}
+
 export function detectLocale(): string {
     const saved = localStorage.getItem('locale')
-    if (saved && supportedLocales.includes(saved)) return saved
+    if (saved && isSupportedLocale(saved)) return saved
 
     const browserLang = navigator.language || ''
-    if (supportedLocales.includes(browserLang)) return browserLang
+    if (isSupportedLocale(browserLang)) return browserLang
 
     const langPrefix = browserLang.split('-')[0]
     if (langPrefix === 'zh') {

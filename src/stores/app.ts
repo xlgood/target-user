@@ -4,7 +4,7 @@ import { configAPI } from '../api'
 import { applyCustomScripts } from '../utils/customScripts'
 import { getImageUrl } from '../utils/image'
 import { getLocalizedText } from '../utils/resellerSiteConfig'
-import { detectLocale } from '../i18n'
+import i18n, { detectLocale, hasSavedLocale, isSupportedLocale } from '../i18n'
 import { useHead } from '@unhead/vue'
 
 export const useAppStore = defineStore('app', () => {
@@ -28,6 +28,14 @@ export const useAppStore = defineStore('app', () => {
     const setLocale = (newLocale: string) => {
         locale.value = newLocale
         localStorage.setItem('locale', newLocale)
+    }
+
+    const applyServerDefaultLocale = (rawLocale: unknown) => {
+        if (hasSavedLocale()) return
+        const nextLocale = String(rawLocale || '').trim()
+        if (!isSupportedLocale(nextLocale) || nextLocale === locale.value) return
+        locale.value = nextLocale
+        ;(i18n.global.locale as any).value = nextLocale
     }
 
     // 全局 head 默认值（标题/描述/keywords/favicon/html lang）。
@@ -79,6 +87,7 @@ export const useAppStore = defineStore('app', () => {
             const requestTime = Date.now()
             const response = await configAPI.get()
             config.value = response.data.data
+            applyServerDefaultLocale(config.value?.default_locale)
             // 计算服务器与客户端的时间偏移量
             if (config.value?.server_time) {
                 const responseTime = Date.now()

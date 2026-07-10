@@ -19,6 +19,7 @@ export function useOrderDetail() {
   const loading = ref(true)
   const order = ref<any>(null)
   const fulfillmentDownloading = ref(false)
+  const fulfillmentRetrying = ref(false)
 
   const helpers = useOrderDisplayHelpers(order)
 
@@ -71,6 +72,20 @@ export function useOrderDetail() {
     }
   }
 
+  const handleRetryFulfillment = async () => {
+    if (!order.value || fulfillmentRetrying.value) return
+    fulfillmentRetrying.value = true
+    try {
+      const response = await userOrderAPI.retryFulfillment(order.value.order_no)
+      order.value = response.data.data
+      toast.success(t('orderDetail.fulfillmentRetrySuccess'))
+    } catch {
+      toast.error(t('orderDetail.fulfillmentRetryFailed'))
+    } finally {
+      fulfillmentRetrying.value = false
+    }
+  }
+
   onMounted(() => {
     if (!route.params.order_no) {
       router.push('/me/orders')
@@ -90,6 +105,8 @@ export function useOrderDetail() {
     cancelOrder,
     fulfillmentDownloading,
     handleDownloadFulfillment,
+    fulfillmentRetrying,
+    handleRetryFulfillment,
     ...helpers,
   }
 }

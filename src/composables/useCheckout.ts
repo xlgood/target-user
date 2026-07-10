@@ -5,7 +5,7 @@ import { useCartStore, type CartItem } from '../stores/cart'
 import { useBuyNowStore } from '../stores/buyNow'
 import { useAppStore } from '../stores/app'
 import { useUserAuthStore } from '../stores/userAuth'
-import { guestOrderAPI, userOrderAPI, walletAPI, type CaptchaPayload } from '../api'
+import { userOrderAPI, walletAPI } from '../api'
 import { debounceAsync } from '../utils/debounce'
 import { type PageAlert } from '../utils/alerts'
 import { amountToCents, basisPointsToPercent, centsToAmount, parseInteger, rateToBasisPoints } from '../utils/money'
@@ -272,7 +272,7 @@ export function useCheckout() {
   const checkoutMode = ref<'guest' | 'member'>('guest')
   const guestEmail = ref('')
   const guestPassword = ref('')
-  const guestCaptchaPayload = ref<CaptchaPayload>({})
+  const guestCaptchaPayload = ref<Record<string, string>>({})
   const guestTurnstileToken = ref('')
   const guestImageCaptchaRef = ref<InstanceType<typeof ImageCaptcha> | null>(null)
   const guestTurnstileRef = ref<InstanceType<typeof TurnstileCaptcha> | null>(null)
@@ -553,22 +553,6 @@ export function useCheckout() {
   })
   const guestTurnstileSiteKey = computed(() => String(captchaConfig.value?.turnstile?.site_key || ''))
 
-  const getGuestCaptchaPayload = (): CaptchaPayload | undefined => {
-    if (!guestCaptchaEnabled.value) return undefined
-    if (captchaProvider.value === 'image') {
-      return {
-        captcha_id: guestCaptchaPayload.value.captcha_id || '',
-        captcha_code: guestCaptchaPayload.value.captcha_code || '',
-      }
-    }
-    if (captchaProvider.value === 'turnstile') {
-      return {
-        turnstile_token: guestTurnstileToken.value,
-      }
-    }
-    return undefined
-  }
-
   const handleGuestCaptchaConfigStale = async () => {
     await appStore.loadConfig(true)
     guestCaptchaPayload.value = {}
@@ -585,17 +569,7 @@ export function useCheckout() {
     if (walletOnlyPayment.value && expectedOnlinePayCents.value > 0) return false
     if (!walletOnlyPayment.value && requiresOnlineChannel.value && !selectedChannelId.value) return false
     if (requiresOnlineChannel.value && selectedChannelAmountHint.value) return false
-    if (userAuthStore.isAuthenticated) return true
-    if (checkoutMode.value !== 'guest') return false
-    if (!guestEmail.value.trim() || !guestPassword.value.trim() || !guestEmailValid.value) return false
-    if (!guestCaptchaEnabled.value) return true
-    if (captchaProvider.value === 'image') {
-      return Boolean(guestCaptchaPayload.value.captcha_id && guestCaptchaPayload.value.captcha_code)
-    }
-    if (captchaProvider.value === 'turnstile') {
-      return Boolean(guestTurnstileToken.value)
-    }
-    return false
+    return userAuthStore.isAuthenticated
   })
 
   const submitBlockedReason = computed(() => {
@@ -615,18 +589,7 @@ export function useCheckout() {
     if (walletOnlyPayment.value && expectedOnlinePayCents.value > 0) return t('payment.walletInsufficientHint')
     if (!walletOnlyPayment.value && requiresOnlineChannel.value && !selectedChannelId.value) return t('checkout.errors.selectPayment')
     if (requiresOnlineChannel.value && selectedChannelAmountHint.value) return selectedChannelAmountHint.value
-    if (userAuthStore.isAuthenticated) return ''
-    if (checkoutMode.value !== 'guest') return t('checkout.errors.loginOrGuest')
-    if (!guestEmail.value.trim() || !guestPassword.value.trim()) return t('checkout.errors.missingGuest')
-    if (!guestEmailValid.value) return t('error.email_invalid')
-    if (guestCaptchaEnabled.value) {
-      if (captchaProvider.value === 'image' && (!guestCaptchaPayload.value.captcha_id || !guestCaptchaPayload.value.captcha_code)) {
-        return t('auth.common.captchaRequired')
-      }
-      if (captchaProvider.value === 'turnstile' && !guestTurnstileToken.value) {
-        return t('auth.common.captchaRequired')
-      }
-    }
+    if (!userAuthStore.isAuthenticated) return t('checkout.errors.loginOrGuest')
     return ''
   })
 
@@ -749,16 +712,14 @@ export function useCheckout() {
     try {
       const payload: any = buildOrderPayload()
 
-      let response
-      if (userAuthStore.isAuthenticated) {
-        response = await userOrderAPI.preview(payload)
-      } else {
-        response = await guestOrderAPI.preview({
-          ...payload,
-          email: guestEmail.value.trim(),
-          order_password: guestPassword.value,
-        })
+      if (!userAuthStore.isAuthenticated) {
+        preview.value = null
+        orderPaymentChannels.value = []
+        previewError.value = t('checkout.errors.loginOrGuest')
+        return
       }
+
+      const response = await userOrderAPI.preview(payload)
 
       if (requestId !== previewRequestId.value) return
       preview.value = response.data.data
@@ -821,22 +782,8 @@ export function useCheckout() {
 
       let responseData: any
 
-      if (userAuthStore.isAuthenticated) {
-        const response = await userOrderAPI.createAndPay(payload)
-        responseData = response.data.data
-      } else {
-        const response = await guestOrderAPI.createAndPay({
-          ...payload,
-          email: guestEmail.value.trim(),
-          order_password: guestPassword.value,
-          captcha_payload: getGuestCaptchaPayload(),
-        })
-        localStorage.setItem('guest_order_auth', JSON.stringify({
-          email: guestEmail.value.trim(),
-          order_password: guestPassword.value,
-        }))
-        responseData = response.data.data
-      }
+      const response = await userOrderAPI.createAndPay(payload)
+      responseData = response.data.data
 
       if (!responseData?.order_no) {
         throw new Error(t('checkout.errors.submitFailed'))
@@ -845,10 +792,7 @@ export function useCheckout() {
       clearSourceStore()
 
       // Redirect to the existing Payment page which handles all payment display
-      const query = userAuthStore.isAuthenticated
-        ? `order_no=${encodeURIComponent(responseData.order_no)}`
-        : `guest=1&order_no=${encodeURIComponent(responseData.order_no)}`
-      router.push(`/pay?${query}`)
+      router.push(`/pay?order_no=${encodeURIComponent(responseData.order_no)}`)
     } catch (err: any) {
       error.value = err.message || t('checkout.errors.submitFailed')
       if (guestCaptchaEnabled.value && captchaProvider.value === 'image') {

@@ -52,13 +52,6 @@
 
         <Button v-if="!userAuthStore.isAuthenticated" as-child variant="ghost" size="sm"
           class="hidden lg:inline-flex gap-1.5 text-muted-foreground whitespace-nowrap">
-          <router-link to="/guest/orders">
-            <ClipboardList class="w-4 h-4 shrink-0 opacity-70" />
-            {{ t('navbar.guestOrders') }}
-          </router-link>
-        </Button>
-        <Button v-if="!userAuthStore.isAuthenticated" as-child variant="ghost" size="sm"
-          class="hidden lg:inline-flex gap-1.5 text-muted-foreground whitespace-nowrap">
           <router-link to="/auth/login">
             <LogIn class="w-4 h-4 shrink-0 opacity-70" />
             {{ t('navbar.login') }}
@@ -165,15 +158,6 @@
             </Button>
           </template>
 
-          <!-- Guest orders (not in bottom nav) -->
-          <Button v-if="!userAuthStore.isAuthenticated" as-child variant="ghost"
-            class="w-full justify-start gap-3 h-auto py-3 rounded-xl text-sm text-muted-foreground [&_svg]:size-5">
-            <router-link to="/guest/orders" @click="showMobileMenu = false" active-class="!text-primary !bg-primary/10">
-              <ClipboardList class="shrink-0 opacity-60" />
-              {{ t('navbar.guestOrders') }}
-            </router-link>
-          </Button>
-
           <!-- Logout (login/me already in bottom nav) -->
           <Button v-if="userAuthStore.isAuthenticated" variant="ghost"
             class="w-full justify-start gap-3 h-auto py-3 rounded-xl text-sm text-destructive hover:text-destructive hover:bg-destructive/10 [&_svg]:size-5"
@@ -212,7 +196,7 @@ import { useUserAuthStore } from '../stores/userAuth'
 import { useTheme } from '../utils/theme'
 import { getImageUrl } from '../utils/image'
 import {
-  Sun, Moon, ShoppingCart, ClipboardList, LogIn, User, LogOut, Languages,
+  Sun, Moon, ShoppingCart, LogIn, User, LogOut, Languages,
   EllipsisVertical, X, Home, LayoutGrid, Newspaper, Bell, Info,
   Link2, FileText, Globe, Star, Heart, MessageCircle, Gift, Zap, Shield,
   BookOpen, Code, Phone, MapPin, Music, Camera,

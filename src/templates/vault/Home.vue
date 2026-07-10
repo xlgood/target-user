@@ -173,6 +173,7 @@ import { Button } from '@/components/ui/button'
 import { categoryAPI, postAPI, productAPI } from '../../api'
 import { buildCategoryGroups, type PublicCategory } from '../../utils/category'
 import { getImageUrl } from '../../utils/image'
+import { routeBaseName } from '../../utils/routeNames'
 import { useLocalized } from '../../composables/useProduct'
 import { useProductList } from '../../composables/useProductList'
 import { useProductListGroups } from '../../composables/useProductListGroups'
@@ -316,8 +317,9 @@ const seoCategoryName = computed(() => {
 usePageSeo({
   canonicalPath: () => route.path,
   title: () => {
-    if (route.name === 'category-products') return seoCategoryName.value || t('nav.products')
-    if (route.name === 'products') return t('nav.products')
+    const name = routeBaseName(route.name)
+    if (name === 'category-products') return seoCategoryName.value || t('nav.products')
+    if (name === 'products') return t('nav.products')
     return undefined
   },
 })

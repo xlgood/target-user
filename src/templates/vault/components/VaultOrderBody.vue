@@ -1,5 +1,20 @@
 <template>
   <div class="grid gap-[18px]">
+    <section v-if="order.fulfillment_error" class="flex flex-col gap-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-[13px] font-semibold text-warning sm:flex-row sm:items-center sm:justify-between">
+      <span>{{ fulfillmentErrorText(order.fulfillment_error) }}</span>
+      <Button
+        v-if="order.fulfillment_retryable"
+        type="button"
+        size="sm"
+        variant="outline"
+        class="shrink-0 border-warning/40 bg-background/80 text-warning hover:bg-warning/10"
+        :disabled="fulfillmentRetrying"
+        @click="emit('retry')"
+      >
+        {{ fulfillmentRetrying ? t('orderDetail.fulfillmentRetrying') : t('orderDetail.fulfillmentRetry') }}
+      </Button>
+    </section>
+
     <!-- 金额明细 -->
     <section class="rounded-xl border bg-card p-[22px]">
       <h2 class="mb-4 text-lg font-bold">{{ t('orderDetail.amountTitle') }}</h2>
@@ -144,6 +159,7 @@
 import { toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import VaultOrderItem from './VaultOrderItem.vue'
 import VaultOrderFulfillment from './VaultOrderFulfillment.vue'
 import { useOrderDisplayHelpers } from '../../../composables/useOrderDisplayHelpers'
@@ -152,10 +168,12 @@ const props = defineProps<{
   order: any
   variant: 'user' | 'guest'
   fulfillmentDownloading: boolean
+  fulfillmentRetrying: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'download', orderNo: string): void
+  (e: 'retry'): void
 }>()
 
 const { t } = useI18n()
@@ -163,6 +181,7 @@ const { t } = useI18n()
 const {
   showTimeCard, showRefundRecordsCard, refundRecords, resolvedChildStatus,
   statusLabel, statusVariant, formatDate, refundReasonText,
+  fulfillmentErrorText,
   formatMoney, formatDiscountMoney, hasDiscountAmount, hasAmount,
 } = useOrderDisplayHelpers(toRef(props, 'order'))
 </script>

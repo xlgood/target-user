@@ -93,11 +93,6 @@ export function usePayment() {
     return ''
   }
 
-  const readRouteQueryFlag = (key: string): boolean => {
-    const value = readRouteQueryValue(key).toLowerCase()
-    return value === '1' || value === 'true' || value === 'yes'
-  }
-
   const paymentReturnMarkers = ['epay_return', 'alipay_return', 'wechat_return', 'epusdt_return', 'bepusdt_return', 'tokenpay_return', 'okpay_return', 'pp_return', 'stripe_return']
   const rechargeBizType = computed(() => readRouteQueryValue('biz_type').toLowerCase())
   const rechargeNoQuery = computed(() => {
@@ -108,7 +103,7 @@ export function usePayment() {
     return ''
   })
   const isRechargeReturn = computed(() => rechargeBizType.value === 'recharge' || /^WR/i.test(rechargeNoQuery.value))
-  const isGuest = computed(() => readRouteQueryFlag('guest'))
+  const isGuest = computed(() => false)
   const orderNoQuery = computed(() => {
     const orderNo = readRouteQueryValue('order_no')
     if (orderNo !== '') return orderNo

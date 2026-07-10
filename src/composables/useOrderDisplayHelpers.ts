@@ -62,6 +62,13 @@ export function useOrderDisplayHelpers(order: Ref<any>) {
   }
   const fulfillmentTypeLabelText = (type: string) => fulfillmentTypeLabel(t, type, 'orderDetail')
   const fulfillmentStatusLabelText = (status: string) => fulfillmentStatusLabel(t, status, 'orderDetail')
+  const fulfillmentErrorText = (code?: string) => {
+    const normalized = String(code || '').trim()
+    if (!normalized) return ''
+    const key = `orderDetail.fulfillmentErrors.${normalized}`
+    const translated = t(key)
+    return translated === key ? t('orderDetail.fulfillmentErrors.default') : translated
+  }
 
   const resolvedChildStatus = (child: any) => {
     const status = String(child?.status || '').trim()
@@ -306,6 +313,7 @@ export function useOrderDisplayHelpers(order: Ref<any>) {
     statusPillClass,
     fulfillmentTypeLabelText,
     fulfillmentStatusLabelText,
+    fulfillmentErrorText,
     resolvedChildStatus,
     isFulfillmentTruncated,
     // 文本/格式化

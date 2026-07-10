@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import { useHead } from '@unhead/vue'
 import { useAppStore } from '../stores/app'
 import { getImageUrl } from '../utils/image'
+import { localePathPrefixes } from '../utils/localeRoutes'
 
 export interface PageSeoOptions {
   /** 页面专属标题；若与站点名相同，仅展示站点名 */
@@ -19,6 +20,21 @@ export interface PageSeoOptions {
 }
 
 const trimSlashEnd = (s: string) => s.replace(/\/+$/, '')
+
+const localeAlternates = [
+  { locale: 'zh-CN', hreflang: 'zh-CN', prefix: 'zh-CN' },
+  { locale: 'zh-TW', hreflang: 'zh-TW', prefix: 'zh-TW' },
+  { locale: 'en-US', hreflang: 'en', prefix: 'en' },
+]
+
+const stripLocalePrefix = (path: string): string => {
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  for (const prefix of localePathPrefixes) {
+    if (normalized === `/${prefix}`) return '/'
+    if (normalized.startsWith(`/${prefix}/`)) return normalized.slice(prefix.length + 1) || '/'
+  }
+  return normalized
+}
 
 const resolveImage = (raw: string, baseUrl: string): string => {
   const trimmed = raw.trim()
@@ -85,8 +101,26 @@ export function usePageSeo(options: PageSeoOptions = {}) {
     if (!path && typeof window !== 'undefined') path = window.location.pathname
     if (!path) path = '/'
     if (!path.startsWith('/')) path = '/' + path
+    path = stripLocalePrefix(path)
     if (!baseUrl.value) return path
     return baseUrl.value + path
+  })
+
+  const alternateLinks = computed(() => {
+    let path = options.canonicalPath?.()
+    if (!path && typeof window !== 'undefined') path = window.location.pathname
+    path = stripLocalePrefix(String(path || '/').trim() || '/')
+    if (!path.startsWith('/')) path = '/' + path
+    const base = baseUrl.value
+    if (!base) return []
+    const links = localeAlternates.map((item) => ({
+      key: `alternate-${item.locale}`,
+      rel: 'alternate',
+      hreflang: item.hreflang,
+      href: `${base}/${item.prefix}${path === '/' ? '' : path}`,
+    }))
+    links.push({ key: 'alternate-x-default', rel: 'alternate', hreflang: 'x-default', href: `${base}${path}` })
+    return links
   })
 
   const fullImage = computed(() => {
@@ -103,8 +137,8 @@ export function usePageSeo(options: PageSeoOptions = {}) {
   useHead({
     title: () => fullTitle.value,
     link: () => {
-      if (!fullCanonical.value) return []
-      return [{ key: 'canonical', rel: 'canonical', href: fullCanonical.value }]
+      if (!fullCanonical.value) return alternateLinks.value
+      return [{ key: 'canonical', rel: 'canonical', href: fullCanonical.value }, ...alternateLinks.value]
     },
     meta: () => {
       const tags: Array<{ name?: string; property?: string; content: string }> = []

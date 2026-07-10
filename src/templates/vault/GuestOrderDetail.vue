@@ -58,7 +58,9 @@
         :order="order"
         variant="guest"
         :fulfillment-downloading="fulfillmentDownloading"
+        :fulfillment-retrying="fulfillmentRetrying"
         @download="handleDownloadFulfillment"
+        @retry="handleRetryFulfillment"
       />
     </template>
   </div>
@@ -78,6 +80,7 @@ const { t } = useI18n()
 const {
   loading, order, authError, auth, showAuthForm, handleAuthSubmit, clearAuth,
   fulfillmentDownloading, handleDownloadFulfillment,
+  fulfillmentRetrying, handleRetryFulfillment,
   statusLabel, statusVariant, formatDate, formatMoney,
 } = useGuestOrderDetail()
 </script>

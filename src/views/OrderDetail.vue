@@ -79,6 +79,21 @@
           </div>
         </div>
 
+        <div v-if="order.fulfillment_error" class="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-sm font-medium text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300 sm:flex-row sm:items-center sm:justify-between">
+          <span>{{ fulfillmentErrorText(order.fulfillment_error) }}</span>
+          <Button
+            v-if="order.fulfillment_retryable"
+            type="button"
+            size="sm"
+            variant="outline"
+            class="shrink-0 border-amber-300 bg-white/70 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+            :disabled="fulfillmentRetrying"
+            @click="handleRetryFulfillment"
+          >
+            {{ fulfillmentRetrying ? t('orderDetail.fulfillmentRetrying') : t('orderDetail.fulfillmentRetry') }}
+          </Button>
+        </div>
+
         <div class="rounded-2xl border bg-card shadow-sm p-6">
           <h2 class="text-lg font-bold mb-4">{{ t('orderDetail.amountTitle') }}</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -450,11 +465,13 @@ const { t } = useI18n()
 const {
   loading, order, debouncedLoadOrder, cancelOrder,
   statusLabel, statusVariant, fulfillmentTypeLabelText, fulfillmentStatusLabelText,
+  fulfillmentErrorText,
   formatDate, getLocalizedText, formatMoney, formatDiscountMoney, hasDiscountAmount, hasAmount,
   refundReasonText, showRefundRecordsCard, refundRecords, showTimeCard,
   orderItemImage, orderItemSkuText, manualSubmissionRows,
   hasItemDiscount, formatItemDiscountTotal, formatItemPaidAmount, resolvedChildStatus,
   fulfillmentDeliveryLines, instructionBlocks, isFulfillmentTruncated,
   fulfillmentCopied, handleCopyFulfillment, fulfillmentDownloading, handleDownloadFulfillment,
+  fulfillmentRetrying, handleRetryFulfillment,
 } = useOrderDetail()
 </script>

@@ -11,6 +11,7 @@ export const userOrderAPI = {
     detail: (orderNo: string, options?: any) => userApi.get(`/orders/${encodeURIComponent(orderNo)}`, options),
     cancel: (orderNo: string) => userApi.post(`/orders/${encodeURIComponent(orderNo)}/cancel`),
     downloadFulfillment: (orderNo: string) => userApi.get(`/orders/${encodeURIComponent(orderNo)}/fulfillment/download`, { blob: true }),
+    retryFulfillment: (orderNo: string) => userApi.post(`/orders/${encodeURIComponent(orderNo)}/fulfillment/retry`),
 }
 
 export const guestOrderAPI = {
@@ -20,6 +21,7 @@ export const guestOrderAPI = {
     list: (params: any) => userApi.get('/guest/orders', { params }),
     detail: (orderNo: string, params: any, options?: any) => userApi.get(`/guest/orders/${encodeURIComponent(orderNo)}`, { params, ...(options || {}) }),
     downloadFulfillment: (orderNo: string, params: any) => userApi.get(`/guest/orders/${encodeURIComponent(orderNo)}/fulfillment/download`, { params, blob: true }),
+    retryFulfillment: (orderNo: string, params: any) => userApi.post(`/guest/orders/${encodeURIComponent(orderNo)}/fulfillment/retry`, {}, { params }),
     createPayment: (data: any) => userApi.post('/guest/payments', data),
     capturePayment: (id: number, data: any) => userApi.post(`/guest/payments/${id}/capture`, data),
     latestPayment: (params: any) => userApi.get('/guest/payments/latest', { params, silentBusinessError: true }),

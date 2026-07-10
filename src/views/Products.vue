@@ -105,6 +105,7 @@ import { useI18n } from 'vue-i18n'
 import { useProductList } from '../composables/useProductList'
 import { usePageSeo } from '../composables/usePageSeo'
 import { useLocalized } from '../composables/useProduct'
+import { routeBaseName } from '../utils/routeNames'
 import ProductCard from '../components/ProductCard.vue'
 import ProductQuickBuy from '../components/ProductQuickBuy.vue'
 import CategorySidebar from '../components/CategorySidebar.vue'
@@ -145,7 +146,7 @@ const seoCategoryName = computed(() => {
 usePageSeo({
   canonicalPath: () => route.path,
   title: () => {
-    if (route.name === 'category-products') {
+    if (routeBaseName(route.name) === 'category-products') {
       return seoCategoryName.value || t('nav.products')
     }
     return t('nav.products')

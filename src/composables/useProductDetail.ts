@@ -300,7 +300,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   }
 
   const purchaseType = computed(() => product.value?.purchase_type || 'member')
-  const requiresLogin = computed(() => purchaseType.value === 'member' && !userAuthStore.isAuthenticated)
+  const requiresLogin = computed(() => !userAuthStore.isAuthenticated)
   const requiresSKUSelection = computed(() => activeSkus.value.length > 1 && !selectedSku.value)
   const stockBelowMinPurchase = computed(() => {
     const limit = quantityEffectiveLimit.value
