@@ -113,7 +113,7 @@
                       {{ formatPrice(selectedSkuWholesaleFinalPrice!, siteCurrency) }}
                     </span>
                     <span class="ml-1.5 text-xs text-muted-foreground line-through">
-                      {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                      {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                   <template v-else-if="selectedSku && hasSkuPromotionPrice(selectedSku)">
@@ -124,7 +124,7 @@
                       {{ formatPrice(selectedSkuPromotionFinalPrice!, siteCurrency) }}
                     </span>
                     <span class="ml-1.5 text-xs text-muted-foreground line-through">
-                      {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                      {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                   <template v-else-if="selectedSku && hasMemberPrice">
@@ -132,12 +132,12 @@
                       {{ formatPrice(selectedSkuMemberPrice!, siteCurrency) }}
                     </span>
                     <span class="ml-1.5 text-xs text-muted-foreground line-through">
-                      {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                      {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                   <template v-else-if="selectedSku">
                     <span class="text-lg md:text-xl font-bold text-primary">
-                      {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                      {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                   <template v-else-if="hasPromotionPrice(product)">
@@ -145,12 +145,12 @@
                       {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
                     </span>
                     <span class="ml-1.5 text-xs text-muted-foreground line-through">
-                      {{ formatPrice(product.price_amount, siteCurrency) }}
+                      {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                   <template v-else>
                     <span class="text-lg md:text-xl font-bold text-primary">
-                      {{ formatPrice(product.price_amount, siteCurrency) }}
+                      {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                 </div>
@@ -361,7 +361,7 @@ const buyNowStore = useBuyNowStore()
 const userAuthStore = useUserAuthStore()
 const userProfileStore = useUserProfileStore()
 
-const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
+const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
 const {
   getFulfillmentTypeLabel,
   getStockBadgeVariant,
@@ -750,6 +750,7 @@ const handleAddToCart = () => {
     slug: props.product.slug,
     title: props.product.title,
     priceAmount: String(sku?.price_amount || props.product.price_amount || '0.00'),
+    priceQuantityBasis: Number(sku?.price_quantity_basis || props.product.price_quantity_basis || 1),
     wholesalePrices: Array.isArray(props.product.wholesale_prices) ? props.product.wholesale_prices : undefined,
     image: images[0] || '',
     minPurchaseQuantity: normalizeOptionalLimitNumber(props.product.min_purchase_quantity) ?? undefined,
@@ -804,6 +805,7 @@ const handleBuyNow = () => {
     slug: props.product.slug,
     title: props.product.title,
     priceAmount: String(sku?.price_amount || props.product.price_amount || '0.00'),
+    priceQuantityBasis: Number(sku?.price_quantity_basis || props.product.price_quantity_basis || 1),
     wholesalePrices: Array.isArray(props.product.wholesale_prices) ? props.product.wholesale_prices : undefined,
     image: images[0] || '',
     minPurchaseQuantity: normalizeOptionalLimitNumber(props.product.min_purchase_quantity) ?? undefined,

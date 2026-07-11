@@ -22,6 +22,7 @@ export interface CartItem {
     slug: string
     title: any
     priceAmount: string
+    priceQuantityBasis?: number
     wholesalePrices?: Array<{ sku_id?: number; sku_code?: string; min_quantity: number; unit_price: string | number }>
     image?: string
     quantity: number
@@ -71,6 +72,12 @@ const normalizeOptionalLimitNumber = (value: unknown): number | undefined => {
     return integerValue
 }
 
+const normalizePriceQuantityBasis = (value: unknown): number => {
+    const numberValue = Number(value)
+    if (!Number.isFinite(numberValue)) return 1
+    return Math.max(1, Math.floor(numberValue))
+}
+
 // 兜底将数量收敛到 [min, max] 区间，确保 store 内数据始终合法。
 // UI 层（ProductDetail / Cart 等）应在调用前根据 min/max 给用户提示，避免出现"数量被静默抬升"的体验。
 const clampCartQuantity = (quantity: number, maxPurchaseQuantity?: number, minPurchaseQuantity?: number) => {
@@ -113,6 +120,7 @@ const loadCartItems = (): CartItem[] => {
                     skuStockSnapshotAt: normalizeOptionalString(row.skuStockSnapshotAt ?? row.sku_stock_snapshot_at),
                     minPurchaseQuantity: normalizeOptionalLimitNumber(row.minPurchaseQuantity ?? row.min_purchase_quantity),
                     maxPurchaseQuantity: normalizeOptionalLimitNumber(row.maxPurchaseQuantity ?? row.max_purchase_quantity),
+                    priceQuantityBasis: normalizePriceQuantityBasis(row.priceQuantityBasis ?? row.price_quantity_basis),
                 } as CartItem
             })
             .filter(Boolean) as CartItem[]
@@ -151,6 +159,7 @@ export const useCartStore = defineStore('cart', () => {
             skuStockSnapshotAt: normalizeOptionalString(item.skuStockSnapshotAt) || new Date().toISOString(),
             minPurchaseQuantity: normalizeOptionalLimitNumber(item.minPurchaseQuantity),
             maxPurchaseQuantity: normalizeOptionalLimitNumber(item.maxPurchaseQuantity),
+            priceQuantityBasis: normalizePriceQuantityBasis(item.priceQuantityBasis),
         }
         const qty = clampCartQuantity(quantity, normalizedItem.maxPurchaseQuantity, normalizedItem.minPurchaseQuantity)
         const identity = cartIdentity(normalizedItem)
@@ -160,6 +169,7 @@ export const useCartStore = defineStore('cart', () => {
             existing.slug = normalizedItem.slug
             existing.title = normalizedItem.title
             existing.priceAmount = normalizedItem.priceAmount
+            existing.priceQuantityBasis = normalizedItem.priceQuantityBasis
             existing.wholesalePrices = normalizedItem.wholesalePrices
             existing.image = normalizedItem.image
             existing.minPurchaseQuantity = normalizedItem.minPurchaseQuantity
@@ -223,6 +233,7 @@ export const useCartStore = defineStore('cart', () => {
         target.skuStockSnapshotAt = normalizeOptionalString(target.skuStockSnapshotAt)
         target.minPurchaseQuantity = normalizeOptionalLimitNumber(target.minPurchaseQuantity)
         target.maxPurchaseQuantity = normalizeOptionalLimitNumber(target.maxPurchaseQuantity)
+        target.priceQuantityBasis = normalizePriceQuantityBasis(target.priceQuantityBasis)
         persist()
     }
 

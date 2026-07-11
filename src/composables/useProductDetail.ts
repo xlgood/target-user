@@ -33,7 +33,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   const userAuthStore = useUserAuthStore()
   const userProfileStore = useUserProfileStore()
 
-  const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
+  const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
   const {
     getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel,
     hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
@@ -400,6 +400,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     slug: product.value.slug,
     title: product.value.title,
     priceAmount: String(sku?.price_amount || product.value.price_amount || '0.00'),
+    priceQuantityBasis: Number(sku?.price_quantity_basis || product.value.price_quantity_basis || 1),
     wholesalePrices: Array.isArray(product.value.wholesale_prices) ? product.value.wholesale_prices : undefined,
     image: images.value[0],
     minPurchaseQuantity: normalizeOptionalLimitNumber(product.value.min_purchase_quantity) ?? undefined,
@@ -505,7 +506,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const mobileBarSkuPriceDisplay = computed(() => {
     if (!selectedSku.value) return ''
-    return formatPrice(selectedSku.value.price_amount, siteCurrency.value)
+    return formatPriceForQuantityBasis(selectedSku.value.price_amount, selectedSku.value.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
   })
   const mobileBarShowProductPromotionPrice = computed(() => {
     if (selectedSku.value) return false
@@ -517,7 +518,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const mobileBarProductPriceDisplay = computed(() => {
     if (!product.value) return ''
-    return formatPrice(product.value.price_amount, siteCurrency.value)
+    return formatPriceForQuantityBasis(product.value.price_amount, product.value.price_quantity_basis, siteCurrency.value)
   })
 
   const goLogin = () => {
@@ -667,7 +668,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
 
   return {
     // 国际化/格式化（模板需要）
-    getLocalizedText, siteCurrency, formatPrice,
+    getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis,
     getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel,
     hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
     hasSkuPromotionPrice, getSkuPromotionPriceAmount, getSkuPromotionSaveAmount,

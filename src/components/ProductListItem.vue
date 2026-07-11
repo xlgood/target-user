@@ -76,13 +76,13 @@
             {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
           </span>
           <div class="flex items-center gap-1">
-            <span class="text-[10px] text-muted-foreground line-through">{{ formatPrice(product.price_amount, siteCurrency) }}</span>
+            <span class="text-[10px] text-muted-foreground line-through">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
             <Badge variant="danger" size="xs" class="px-1 py-0 text-[9px] leading-tight">{{ t('products.promotionTag') }}</Badge>
           </div>
         </div>
         <div v-else>
           <span class="text-xs sm:text-sm font-bold text-foreground whitespace-nowrap">
-            {{ formatPrice(product.price_amount, siteCurrency) }}
+            {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
           </span>
           <div v-if="hasWholesalePrices(product)">
             <Badge variant="success" size="xs" class="px-1 py-0 text-[9px] leading-tight">{{ t('products.wholesaleTag') }}</Badge>
@@ -136,6 +136,6 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
+const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
 const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules, hasWholesalePrices } = useProductLabels()
 </script>

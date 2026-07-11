@@ -28,7 +28,13 @@ export function useLocalized() {
     return `${displayAmount} ${cur}`
   }
 
-  return { getLocalizedText, siteCurrency, formatPrice }
+  const formatPriceForQuantityBasis = (amount: any, basis: any, currency?: any): string => {
+    const price = formatPrice(amount, currency)
+    const normalizedBasis = Math.max(1, Math.floor(Number(basis) || 1))
+    return normalizedBasis === 1 ? price : `${price} / ${normalizedBasis}`
+  }
+
+  return { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis }
 }
 
 export function useProductLabels() {

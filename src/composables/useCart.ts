@@ -59,7 +59,8 @@ export function useCart() {
     if (amountCents === null || qty === null) {
       return formatPrice('-', totalCurrency.value)
     }
-    return formatPrice(centsToAmount(amountCents * qty), totalCurrency.value)
+    const basis = Math.max(1, Math.floor(Number(item.priceQuantityBasis) || 1))
+    return formatPrice(centsToAmount(Math.round(amountCents * qty / basis)), totalCurrency.value)
   }
 
   const updateQty = (item: CartItem, qty: number) => {

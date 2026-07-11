@@ -39,9 +39,9 @@
         <div class="flex flex-wrap items-baseline gap-x-1.5">
           <template v-if="promo">
             <span class="text-xl font-extrabold tabular-nums text-primary">{{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}</span>
-            <span class="text-sm font-semibold text-muted-foreground line-through">{{ formatPrice(product.price_amount, siteCurrency) }}</span>
+            <span class="text-sm font-semibold text-muted-foreground line-through">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
           </template>
-          <span v-else class="text-xl font-extrabold tabular-nums text-foreground">{{ formatPrice(product.price_amount, siteCurrency) }}</span>
+          <span v-else class="text-xl font-extrabold tabular-nums text-foreground">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
         </div>
         <span v-if="priceSignal" class="inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="priceSignal.tone">{{ priceSignal.label }}</span>
       </div>
@@ -72,7 +72,7 @@ const props = withDefaults(defineProps<{ product: any; index?: number }>(), { in
 defineEmits<{ quickBuy: [product: any] }>()
 
 const { t } = useI18n()
-const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
+const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
 const {
   getStockStatusLabel, getPurchaseTypeLabel, getFulfillmentTypeLabel,
   isSoldOut, hasPromotionPrice, getPromotionPriceAmount, hasWholesalePrices, hasPromotionRules,

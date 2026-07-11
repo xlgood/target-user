@@ -115,7 +115,7 @@
                         {{ formatPrice(selectedSkuWholesaleFinalPrice!, siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
-                        {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                        {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                       </span>
                     </div>
                     <p
@@ -136,7 +136,7 @@
                         {{ formatPrice(selectedSkuPromotionPrice!, siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
-                        {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                        {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                       </span>
                     </div>
                     <p v-if="selectedSkuPromotionFinalIsMember" class="text-sm font-medium text-amber-600 dark:text-amber-300">
@@ -153,7 +153,7 @@
                         {{ formatPrice(selectedSkuMemberPrice!, siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
-                        {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                        {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                       </span>
                     </div>
                     <p class="text-sm font-medium text-amber-600 dark:text-amber-300">
@@ -163,7 +163,7 @@
                   <!-- 选中 SKU 但无促销价也无会员价 -->
                   <div v-else-if="selectedSku" class="flex items-end gap-4">
                     <span class="theme-price-lg text-primary">
-                      {{ formatPrice(selectedSku.price_amount, siteCurrency) }}
+                      {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                   </div>
                   <!-- 未选 SKU，产品级有促销价 -->
@@ -173,7 +173,7 @@
                         {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
-                        {{ formatPrice(product.price_amount, siteCurrency) }}
+                        {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
                       </span>
                     </div>
                     <p class="text-sm font-medium text-rose-500 dark:text-rose-300">
@@ -183,7 +183,7 @@
                   <!-- 未选 SKU，无促销 -->
                   <div v-else class="flex items-end gap-4">
                     <span class="theme-price-lg text-primary">
-                      {{ formatPrice(product.price_amount, siteCurrency) }}
+                      {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
                     </span>
                   </div>
                 </div>
@@ -449,7 +449,7 @@ const setupMobileBarObserver = () => {
 
 // 全部业务逻辑由 useProductDetail 提供（与 vault 模板共用，保证功能一致）
 const {
-  getLocalizedText, siteCurrency, formatPrice,
+  getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis,
   getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel,
   hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
   hasSkuPromotionPrice, getSkuPromotionSaveAmount,

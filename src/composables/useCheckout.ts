@@ -893,7 +893,8 @@ export function useCheckout() {
     if (amountCents === null || qty === null) {
       return null
     }
-    return amountCents * qty
+    const basis = Math.max(1, Math.floor(Number(item.priceQuantityBasis) || 1))
+    return Math.round(amountCents * qty / basis)
   }
 
   const cartItemWholesaleSubtotalCents = (item: CartItem) => {
@@ -912,7 +913,8 @@ export function useCheckout() {
       qty,
     ))
     if (matchedPriceCents === null) return null
-    return matchedPriceCents * qty
+    const basis = Math.max(1, Math.floor(Number(item.priceQuantityBasis) || 1))
+    return Math.round(matchedPriceCents * qty / basis)
   }
 
   const checkoutItemPreview = (item: CartItem) => previewItemsByKey.value.get(cartItemKey(item))

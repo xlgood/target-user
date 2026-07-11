@@ -100,7 +100,7 @@
             </template>
             <!-- 4. SKU 原价 -->
             <div v-else-if="selectedSku" class="flex flex-wrap items-baseline gap-3">
-              <span class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPrice(selectedSku.price_amount, siteCurrency) }}</span>
+              <span class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}</span>
             </div>
             <!-- 5. 产品级促销 -->
             <template v-else-if="hasPromotionPrice(product)">
@@ -112,7 +112,7 @@
             </template>
             <!-- 6. 产品级原价 -->
             <div v-else class="flex flex-wrap items-baseline gap-3">
-              <span class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPrice(product.price_amount, siteCurrency) }}</span>
+              <span class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
             </div>
           </div>
 
@@ -278,7 +278,7 @@ const setupMobileBarObserver = () => {
 }
 
 const {
-  getLocalizedText, siteCurrency, formatPrice,
+  getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis,
   getFulfillmentTypeLabel, getPurchaseTypeLabel, getStockStatusLabel, getStockBadgeVariant,
   hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
   hasSkuPromotionPrice, getSkuPromotionSaveAmount,

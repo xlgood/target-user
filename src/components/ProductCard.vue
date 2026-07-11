@@ -107,15 +107,15 @@
           <span
             v-else
             class="theme-price-sm"
-            :aria-label="t('products.priceAria', { price: formatPrice(product.price_amount, siteCurrency) })"
+            :aria-label="t('products.priceAria', { price: formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) })"
           >
-            {{ formatPrice(product.price_amount, siteCurrency) }}
+            {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
           </span>
           <div v-if="hasPromotionPrice(product)" class="mt-0.5 flex flex-wrap items-center gap-1.5">
             <span
               class="hidden md:inline text-xs text-muted-foreground opacity-80 line-through"
-              :aria-label="t('products.originalPriceAria', { price: formatPrice(product.price_amount, siteCurrency) })"
-            >{{ formatPrice(product.price_amount, siteCurrency) }}</span>
+              :aria-label="t('products.originalPriceAria', { price: formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) })"
+            >{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
             <Badge variant="danger" size="xs">
               {{ t('products.promotionTag') }}
             </Badge>
@@ -188,7 +188,7 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { getLocalizedText, siteCurrency, formatPrice } = useLocalized()
+const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
 const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules, hasWholesalePrices } = useProductLabels()
 
 const imageErrored = ref(false)
