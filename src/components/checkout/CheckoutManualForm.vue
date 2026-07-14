@@ -68,7 +68,7 @@
               v-else
               :model-value="getFieldValue(manualItem.itemKey, field.key)"
               @update:model-value="updateFieldValue(manualItem.itemKey, field.key, $event)"
-              :type="field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'"
+              :type="field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : field.type === 'url' ? 'url' : 'text'"
               :placeholder="getManualFieldPlaceholder(field)"
             />
 
