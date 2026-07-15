@@ -11,8 +11,8 @@
     <div class="w-11 h-11 sm:w-16 sm:h-16 flex-shrink-0 overflow-hidden relative rounded-lg m-1.5 sm:m-2.5">
       <img v-if="product.images && getFirstImageUrl(product.images)" :src="getFirstImageUrl(product.images)"
         :alt="getLocalizedText(product.title)" loading="lazy"
-        class="w-full h-full object-cover transition-transform duration-500"
-        :class="isSoldOut(product) ? 'grayscale brightness-75' : 'group-hover:scale-110'" />
+        class="w-full h-full transition-transform duration-500"
+        :class="[isProviderCatalogImage(getFirstImageUrl(product.images)) ? 'object-contain' : 'object-cover', isSoldOut(product) ? 'grayscale brightness-75' : 'group-hover:scale-110']" />
       <img v-else-if="product.category?.icon" :src="getImageUrl(product.category.icon)"
         :alt="getLocalizedText(product.category?.name)" loading="lazy"
         class="w-full h-full object-cover transition-transform duration-500"
@@ -115,7 +115,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { ChevronRight, Image as ImageIcon, ShoppingCart } from 'lucide-vue-next'
-import { getFirstImageUrl, getImageUrl } from '../utils/image'
+import { getFirstImageUrl, getImageUrl, isProviderCatalogImage } from '../utils/image'
 import { useLocalized, useProductLabels } from '../composables/useProduct'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

@@ -4,7 +4,7 @@
       @touchstart="onImageTouchStart"
       @touchend="onImageTouchEnd">
       <img v-if="currentImage" :src="currentImage" :alt="productTitle"
-        class="w-full aspect-[4/3] object-cover rounded-xl border relative z-10 shadow-lg" />
+        class="w-full aspect-[4/3] rounded-xl border relative z-10 shadow-lg" :class="isProviderCatalogImage(currentImage) ? 'object-contain' : 'object-cover'" />
       <div v-else
         class="w-full aspect-[4/3] bg-muted rounded-xl border flex items-center justify-center relative z-10">
         <ImageIcon class="w-24 h-24 text-muted-foreground" :stroke-width="1.5" />
@@ -16,7 +16,7 @@
       <div v-for="(image, index) in images" :key="index" @click="$emit('update:currentImage', image)"
         class="cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-300 shrink-0 w-16 h-16 md:w-auto md:h-auto md:aspect-square snap-start"
         :class="currentImage === image ? 'border-primary ring-1 ring-primary/40 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:scale-105'">
-        <img :src="image" :alt="`Image ${index + 1}`" loading="lazy" class="w-full h-full object-cover" />
+        <img :src="image" :alt="`Image ${index + 1}`" loading="lazy" class="w-full h-full" :class="isProviderCatalogImage(image) ? 'object-contain' : 'object-cover'" />
       </div>
     </div>
   </div>
@@ -24,6 +24,7 @@
 
 <script setup lang="ts">
 import { Image as ImageIcon } from 'lucide-vue-next'
+import { isProviderCatalogImage } from '../../utils/image'
 
 const props = defineProps<{
   images: string[]

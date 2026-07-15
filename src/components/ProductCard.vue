@@ -14,8 +14,9 @@
       ></div>
       <img v-if="displayImageSrc && !imageErrored" :src="displayImageSrc"
         :alt="getLocalizedText(product.title)" loading="lazy" decoding="async"
-        class="w-full h-full object-cover transform transition-transform duration-700 ease-out"
+        class="w-full h-full transform transition-transform duration-700 ease-out"
         :class="[
+          isProviderCatalogImage(displayImageSrc) ? 'object-contain' : 'object-cover',
           isSoldOut(product) ? 'grayscale brightness-75' : 'group-hover:scale-105',
         ]"
         @error="handleImageError" />
@@ -165,7 +166,7 @@
 import { useI18n } from 'vue-i18n'
 import { computed, ref, watch } from 'vue'
 import { ArrowRight, ChevronRight, Image as ImageIcon, Lock, Pencil, ShoppingCart, UserPlus, Zap } from 'lucide-vue-next'
-import { getFirstImageUrl, getImageUrl } from '../utils/image'
+import { getFirstImageUrl, getImageUrl, isProviderCatalogImage } from '../utils/image'
 import { useLocalized, useProductLabels } from '../composables/useProduct'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

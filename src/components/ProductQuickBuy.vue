@@ -72,7 +72,8 @@
                   v-if="productImage"
                   :src="productImage"
                   :alt="productTitle"
-                  class="w-full h-full object-cover"
+                  class="w-full h-full"
+                  :class="isProviderCatalogImage(productImage) ? 'object-contain' : 'object-cover'"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center bg-muted">
                   <ImageIcon class="w-7 h-7 text-muted-foreground" :stroke-width="1.5" />
@@ -334,7 +335,7 @@ import { useCartStore } from '../stores/cart'
 import { useBuyNowStore } from '../stores/buyNow'
 import { useUserAuthStore } from '../stores/userAuth'
 import { useUserProfileStore } from '../stores/userProfile'
-import { getFirstImageUrl, getImageUrl } from '../utils/image'
+import { getFirstImageUrl, getImageUrl, isProviderCatalogImage } from '../utils/image'
 import { normalizeSkuId, buildSkuDisplayText } from '../utils/sku'
 import { resolveSkuAvailableStock, resolveSkuStockDisplay, type PublicStockDisplay } from '../utils/publicStock'
 import { useLocalized, useProductLabels } from '../composables/useProduct'
