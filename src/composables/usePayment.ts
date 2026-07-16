@@ -95,6 +95,7 @@ export function usePayment() {
 
   // The backend generates paypal_return; keep pp_return for links created by older deployments.
   const paymentReturnMarkers = ['epay_return', 'alipay_return', 'wechat_return', 'epusdt_return', 'bepusdt_return', 'tokenpay_return', 'okpay_return', 'paypal_return', 'pp_return', 'stripe_return']
+  const isPaypalCancelReturn = () => readRouteQueryValue('paypal_cancel').toLowerCase() === '1'
   const rechargeBizType = computed(() => readRouteQueryValue('biz_type').toLowerCase())
   const rechargeNoQuery = computed(() => {
     const rechargeNo = readRouteQueryValue('recharge_no')
@@ -812,7 +813,7 @@ export function usePayment() {
         void captureCurrentPayment({ silent: true })
         startCountdown()
         // 对 redirect 模式自动打开支付链接
-        if (shouldAutoOpenPaymentLink(data)) {
+        if (!isPaypalCancelReturn() && shouldAutoOpenPaymentLink(data)) {
           openPayLinkInCompatibleWindow()
         }
       }
@@ -865,6 +866,7 @@ export function usePayment() {
 
   const capturePaypalIfNeeded = async () => {
     if (capturing.value) return
+    if (isPaypalCancelReturn()) return
     const paymentID = currentPaymentID()
     if (!paymentID) return
     if (!(paymentProviderType.value === 'official' && paymentChannelType.value === 'paypal')) return
@@ -1259,6 +1261,9 @@ export function usePayment() {
       // The payment record is loaded asynchronously from the returned order.
       // Capture only after that record is available, rather than relying on watcher timing.
       await capturePaypalIfNeeded()
+      if (isPaypalCancelReturn()) {
+        await router.replace({ path: route.path, query: buildPayRouteQuery() })
+      }
     })()
     void loadWallet()
     if (!appStore.config || !Array.isArray(appStore.config?.payment_channels)) {
