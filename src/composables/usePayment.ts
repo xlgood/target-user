@@ -93,7 +93,8 @@ export function usePayment() {
     return ''
   }
 
-  const paymentReturnMarkers = ['epay_return', 'alipay_return', 'wechat_return', 'epusdt_return', 'bepusdt_return', 'tokenpay_return', 'okpay_return', 'pp_return', 'stripe_return']
+  // The backend generates paypal_return; keep pp_return for links created by older deployments.
+  const paymentReturnMarkers = ['epay_return', 'alipay_return', 'wechat_return', 'epusdt_return', 'bepusdt_return', 'tokenpay_return', 'okpay_return', 'paypal_return', 'pp_return', 'stripe_return']
   const rechargeBizType = computed(() => readRouteQueryValue('biz_type').toLowerCase())
   const rechargeNoQuery = computed(() => {
     const rechargeNo = readRouteQueryValue('recharge_no')
@@ -867,7 +868,7 @@ export function usePayment() {
     const paymentID = currentPaymentID()
     if (!paymentID) return
     if (!(paymentProviderType.value === 'official' && paymentChannelType.value === 'paypal')) return
-    const returnFlag = readRouteQueryValue('pp_return').toLowerCase()
+    const returnFlag = (readRouteQueryValue('paypal_return') || readRouteQueryValue('pp_return')).toLowerCase()
     const token = readRouteQueryValue('token')
     const payerId = readRouteQueryValue('payer_id') || readRouteQueryValue('PayerID')
     if (returnFlag !== '1' && token === '' && payerId === '') return
