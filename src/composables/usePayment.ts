@@ -1254,7 +1254,12 @@ export function usePayment() {
       email: savedAuth.email || '',
       order_password: savedAuth.order_password || '',
     }
-    loadOrder()
+    void (async () => {
+      await loadOrder()
+      // The payment record is loaded asynchronously from the returned order.
+      // Capture only after that record is available, rather than relying on watcher timing.
+      await capturePaypalIfNeeded()
+    })()
     void loadWallet()
     if (!appStore.config || !Array.isArray(appStore.config?.payment_channels)) {
       appStore.loadConfig(true)
@@ -1372,9 +1377,10 @@ export function usePayment() {
   }
 
   const handleRefresh = async () => {
+    await debouncedLoadOrder()
+    await capturePaypalIfNeeded()
     await captureCurrentPayment()
     await Promise.all([
-      debouncedLoadOrder(),
       loadWallet(),
       debouncedLoadOrderPaymentChannels(),
     ])
