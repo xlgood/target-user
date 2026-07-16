@@ -939,6 +939,10 @@ export function usePayment() {
   }
 
   const syncPaymentReturnIfNeeded = async () => {
+    // PayPal needs its return parameters until capturePaypalIfNeeded captures the order.
+    // Other providers only need the generic status refresh below.
+    if ((readRouteQueryValue('paypal_return') || readRouteQueryValue('pp_return')).toLowerCase() === '1') return
+
     // 支持所有支付方式的回调同步跳转
     const hasReturn = paymentReturnMarkers.some(marker => readRouteQueryValue(marker).toLowerCase() === '1')
 
