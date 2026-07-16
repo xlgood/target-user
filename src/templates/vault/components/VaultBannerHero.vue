@@ -1,7 +1,34 @@
 <template>
-  <section v-if="showHeroSection" class="mx-auto w-full max-w-[1180px] px-4 pt-6 sm:px-6">
+  <section class="mx-auto w-full max-w-[1180px] px-4 pt-6 sm:px-6">
+    <div v-if="!bannerLoading && !bannerCount" class="relative overflow-hidden rounded-2xl border border-primary/20 bg-[radial-gradient(circle_at_top_right,rgba(115,103,240,0.28),transparent_34%),linear-gradient(120deg,#17182a,#10111b)] px-6 py-10 shadow-[var(--shadow)] sm:px-10 sm:py-14 md:px-14 md:py-16">
+      <div class="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-primary/20 blur-3xl"></div>
+      <div class="absolute bottom-0 left-1/2 h-px w-2/3 bg-gradient-to-r from-transparent via-primary/70 to-transparent"></div>
+      <div class="relative max-w-3xl">
+        <span class="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary-foreground">
+          <Zap class="h-3.5 w-3.5" /> {{ t('vault.hero.badge') }}
+        </span>
+        <h1 class="mt-5 max-w-2xl text-3xl font-extrabold leading-[1.12] tracking-[-0.04em] text-white sm:text-4xl md:text-5xl">
+          {{ t('vault.hero.titleLead') }}<span class="text-primary">{{ t('vault.hero.titleHl') }}</span>
+        </h1>
+        <p class="mt-5 max-w-2xl text-sm leading-7 text-white/70 sm:text-base">{{ t('vault.hero.lede') }}</p>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <RouterLink to="/products" class="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition hover:bg-primary/90">
+            {{ t('home.featured.viewAll') }} <ArrowRight class="h-4 w-4" />
+          </RouterLink>
+          <RouterLink to="/about" class="inline-flex min-h-11 items-center rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/85 transition hover:bg-white/10">
+            {{ t('nav.about') }}
+          </RouterLink>
+        </div>
+        <div class="mt-8 grid gap-3 text-xs font-semibold text-white/60 sm:grid-cols-3">
+          <span>{{ t('vault.hero.trustFast') }}</span>
+          <span>{{ t('vault.hero.trustSecure') }}</span>
+          <span>{{ t('vault.hero.trustRefund') }}</span>
+        </div>
+      </div>
+    </div>
     <div
-      class="relative overflow-hidden rounded-lg border bg-card shadow-[var(--shadow)]"
+      v-else
+      class="relative overflow-hidden rounded-2xl border bg-card shadow-[var(--shadow)]"
       @touchstart="onBannerTouchStart"
       @touchend="onBannerTouchEnd"
     >
@@ -92,7 +119,6 @@ const {
   bannerLoading,
   currentBannerIndex,
   bannerCount,
-  showHeroSection,
   heroImage,
   heroBadge,
   heroTitle,

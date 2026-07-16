@@ -80,32 +80,39 @@
     <!-- ==================== 卡片模式（默认） ==================== -->
     <template v-else>
       <!-- 分类块 -->
-      <section v-if="topCategories.length" class="mx-auto w-full max-w-[1180px] px-4 py-9 sm:px-6">
-        <div class="mb-[22px] flex flex-wrap items-end justify-between gap-4">
-          <h2 class="text-[28px] font-extrabold">{{ t('vault.categoriesTitle') }}</h2>
-          <Button as-child variant="ghost" size="sm" class="rounded-full"><RouterLink to="/products">{{ t('vault.allCategories') }} <ChevronRight /></RouterLink></Button>
+      <section v-if="topCategories.length" class="mx-auto w-full max-w-[1180px] px-4 py-12 sm:px-6">
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.14em] text-primary">{{ t('nav.products') }}</p>
+            <h2 class="mt-2 text-3xl font-extrabold tracking-[-0.03em]">{{ t('vault.categoriesTitle') }}</h2>
+          </div>
+          <Button as-child variant="outline" size="sm" class="rounded-full"><RouterLink to="/products">{{ t('vault.allCategories') }} <ChevronRight /></RouterLink></Button>
         </div>
-        <div class="grid gap-3.5 grid-cols-[repeat(auto-fill,minmax(150px,1fr))]">
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <RouterLink
             v-for="(cat, idx) in topCategories"
             :key="cat.id"
-            class="relative flex min-h-[116px] flex-col justify-between gap-2.5 overflow-hidden rounded-lg p-[18px] transition hover:-translate-y-[3px] hover:shadow-[var(--shadow)]"
+            class="group relative flex min-h-[92px] items-center gap-3 overflow-hidden rounded-xl border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[var(--shadow)]"
             :class="catColor(idx)"
             :to="`/categories/${cat.slug}`"
           >
-            <span class="grid h-10 w-10 place-items-center rounded-xl bg-white/20">
-              <img v-if="cat.icon" :src="getImageUrl(cat.icon)" :alt="catName(cat)" loading="lazy" class="h-6 w-6 object-contain" />
-              <Tag v-else class="h-[22px] w-[22px]" />
+            <span class="grid h-10 w-10 flex-none place-items-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+              <img v-if="cat.icon" :src="getImageUrl(cat.icon)" :alt="catName(cat)" loading="lazy" class="h-5 w-5 object-contain" />
+              <Tag v-else class="h-5 w-5" />
             </span>
-            <div class="min-w-0"><div class="line-clamp-2 break-words font-bold">{{ catName(cat) }}</div></div>
+            <div class="min-w-0"><div class="line-clamp-2 break-words text-sm font-bold text-foreground">{{ catName(cat) }}</div></div>
+            <ChevronRight class="ml-auto h-4 w-4 flex-none text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
           </RouterLink>
         </div>
       </section>
 
       <!-- 热门商品 -->
-      <section class="mx-auto w-full max-w-[1180px] px-4 py-9 sm:px-6">
-        <div class="mb-[22px] flex flex-wrap items-end justify-between gap-4">
-          <h2 class="text-[28px] font-extrabold">{{ t('home.featured.title') }}</h2>
+      <section class="mx-auto w-full max-w-[1180px] px-4 pb-14 sm:px-6">
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.14em] text-primary">{{ t('home.featured.title') }}</p>
+            <h2 class="mt-2 text-3xl font-extrabold tracking-[-0.03em]">{{ t('home.featured.title') }}</h2>
+          </div>
           <Button as-child variant="outline" size="sm" class="rounded-full"><RouterLink to="/products">{{ t('home.featured.viewAll') }}</RouterLink></Button>
         </div>
 
@@ -121,9 +128,11 @@
             @quick-buy="openQuickBuy"
           />
         </div>
-        <div v-else class="flex flex-col items-center gap-3 rounded-lg border border-dashed py-14 text-center text-muted-foreground">
-          <PackageOpen class="h-12 w-12 opacity-60" />
-          <p>{{ t('home.featured.empty') }}</p>
+        <div v-else class="relative overflow-hidden rounded-2xl border border-dashed border-primary/25 bg-card/50 px-6 py-14 text-center text-muted-foreground">
+          <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary"><PackageOpen class="h-7 w-7" /></div>
+          <p class="mt-4 text-base font-bold text-foreground">{{ t('home.featured.empty') }}</p>
+          <p class="mx-auto mt-2 max-w-md text-sm leading-6">{{ t('products.subtitle') }}</p>
+          <Button as-child variant="outline" size="sm" class="mt-5 rounded-full"><RouterLink to="/products">{{ t('home.featured.viewAll') }}</RouterLink></Button>
         </div>
       </section>
 
@@ -245,14 +254,7 @@ const productsLoading = ref(true)
 const posts = ref<any[]>([])
 const topCategories = ref<PublicCategory[]>([])
 
-const catColors = [
-  'bg-[color:var(--red)] text-white',
-  'bg-[color:var(--teal)] text-white',
-  'bg-[color:var(--plum)] text-white',
-  'bg-[color:var(--gold)] text-[color:var(--on-gold)]',
-  'bg-[color:var(--ink)] text-[color:var(--bg)]',
-]
-const catColor = (idx: number) => catColors[idx % catColors.length]
+const catColor = (_idx: number) => ''
 const catName = (cat: PublicCategory) => getLocalizedText(cat.name) || cat.slug || ''
 
 const navBuiltin = computed(() => (appStore.config?.nav_config as { builtin?: Record<string, boolean> } | undefined)?.builtin)
