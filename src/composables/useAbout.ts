@@ -57,7 +57,7 @@ export function useAbout() {
 
   const hasIntroduction = computed(() => introductionText.value !== '')
   const hasServices = computed(() => servicesTitle.value !== '' || serviceItems.value.length > 0)
-  const hasContactLinks = computed(() => !!(contactConfig.value?.telegram || contactConfig.value?.whatsapp))
+  const hasContactLinks = computed(() => !!(contactConfig.value?.email || contactConfig.value?.telegram || contactConfig.value?.whatsapp))
   const hasContact = computed(() => contactTitle.value !== '' || contactText.value !== '' || hasContactLinks.value)
 
   onMounted(async () => {

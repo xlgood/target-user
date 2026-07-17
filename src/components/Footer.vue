@@ -52,6 +52,13 @@
         <div>
           <h4 class="text-foreground font-bold mb-6 tracking-wide">{{ t('footer.contact') }}</h4>
           <div class="space-y-4">
+            <a v-if="config?.contact?.email" :href="`mailto:${config.contact.email}`"
+              class="flex items-center space-x-3 text-sm hover:text-gray-900 dark:hover:text-white transition-colors p-3 rounded-lg bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10">
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2.25 2.25 0 0 0 2.22 0L21 8m-18 8h18V6H3v10Z" />
+              </svg>
+              <span>{{ config.contact.email }}</span>
+            </a>
             <a v-if="config?.contact?.telegram" :href="config.contact.telegram" target="_blank"
               rel="noopener noreferrer"
               class="flex items-center space-x-3 text-sm hover:text-gray-900 dark:hover:text-white transition-colors p-3 rounded-lg bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-100 dark:border-white/5 hover:border-gray-200 dark:hover:border-white/10">

@@ -44,6 +44,13 @@
             {{ contactText }}
           </p>
           <div v-if="hasContactLinks" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <a v-if="contactConfig?.email" :href="`mailto:${contactConfig.email}`"
+              class="group flex items-center justify-center space-x-3 bg-secondary border text-muted-foreground px-6 py-4 rounded-xl transition-colors hover:text-foreground">
+              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2.25 2.25 0 0 0 2.22 0L21 8m-18 8h18V6H3v10Z" />
+              </svg>
+              <span class="font-bold">{{ contactConfig.email }}</span>
+            </a>
             <a v-if="contactConfig?.telegram" :href="contactConfig.telegram" target="_blank" rel="noopener noreferrer"
               class="group flex items-center justify-center space-x-3 bg-secondary border text-muted-foreground px-6 py-4 rounded-xl transition-colors hover:text-foreground">
               <svg class="w-6 h-6 text-sky-500" fill="currentColor" viewBox="0 0 24 24">

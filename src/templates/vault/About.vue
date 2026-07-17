@@ -28,6 +28,10 @@
         </h2>
         <p v-if="contactText" class="mb-[18px] whitespace-pre-line leading-relaxed text-muted-foreground">{{ contactText }}</p>
         <div v-if="hasContactLinks" class="grid gap-3.5 sm:grid-cols-2">
+          <a v-if="contactConfig?.email" :href="`mailto:${contactConfig.email}`" class="flex items-center justify-center gap-3 rounded-md border bg-secondary p-4 font-bold text-muted-foreground transition hover:border-hairline-strong hover:text-foreground">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="h-6 w-6 flex-none text-primary" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2.25 2.25 0 0 0 2.22 0L21 8m-18 8h18V6H3v10Z" /></svg>
+            <span>{{ contactConfig.email }}</span>
+          </a>
           <a v-if="contactConfig?.telegram" :href="contactConfig.telegram" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-3 rounded-md border bg-secondary p-4 font-bold text-muted-foreground transition hover:border-hairline-strong hover:text-foreground">
             <svg viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6 flex-none text-[#0ea5e9]"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z" /></svg>
             <span>Telegram</span>
