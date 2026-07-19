@@ -22,7 +22,7 @@
     <div class="mx-1 flex flex-wrap items-center gap-1.5">
       <span class="inline-flex items-center gap-1 rounded-full bg-[color:var(--teal-soft)] px-2 py-0.5 text-[11px] font-semibold text-[color:var(--teal-strong)]">
         <component :is="product.fulfillment_type === 'auto' ? Zap : Pencil" class="h-3 w-3" />
-        {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
+        {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
       </span>
       <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="product.purchase_type === 'guest' ? 'bg-[color:var(--gold-soft)] text-[color:var(--gold-strong)]' : 'bg-[color:var(--teal-soft)] text-[color:var(--teal-strong)]'">
         <component :is="product.purchase_type === 'guest' ? UserPlus : Lock" class="h-3 w-3" />
@@ -39,9 +39,9 @@
         <div class="flex flex-wrap items-baseline gap-x-1.5">
           <template v-if="promo">
             <span class="text-xl font-extrabold tabular-nums text-primary">{{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}</span>
-            <span class="text-sm font-semibold text-muted-foreground line-through">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
+            <span class="text-sm font-semibold text-muted-foreground line-through">{{ formatPriceForMinimumQuantity(product.price_amount, product.price_quantity_basis, product.min_purchase_quantity, siteCurrency) }}</span>
           </template>
-          <span v-else class="text-xl font-extrabold tabular-nums text-foreground">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
+          <span v-else class="text-xl font-extrabold tabular-nums text-foreground">{{ formatPriceForMinimumQuantity(product.price_amount, product.price_quantity_basis, product.min_purchase_quantity, siteCurrency) }}</span>
         </div>
         <span v-if="priceSignal" class="inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="priceSignal.tone">{{ priceSignal.label }}</span>
       </div>
@@ -72,7 +72,7 @@ const props = withDefaults(defineProps<{ product: any; index?: number }>(), { in
 defineEmits<{ quickBuy: [product: any] }>()
 
 const { t } = useI18n()
-const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
+const { getLocalizedText, siteCurrency, formatPrice, formatPriceForMinimumQuantity } = useLocalized()
 const {
   getStockStatusLabel, getPurchaseTypeLabel, getFulfillmentTypeLabel,
   isSoldOut, isStockPending, hasPromotionPrice, getPromotionPriceAmount, hasWholesalePrices, hasPromotionRules,

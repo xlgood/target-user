@@ -49,7 +49,7 @@
             <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12.5px] font-semibold" :class="stockPillTone">{{ getStockStatusLabel(product) }}</span>
             <span class="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--teal-soft)] px-2.5 py-1 text-[12.5px] font-semibold text-[color:var(--teal-strong)]">
               <component :is="product.fulfillment_type === 'auto' ? Zap : Pencil" class="h-3.5 w-3.5" />
-              {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
+              {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
             </span>
             <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12.5px] font-semibold" :class="product.purchase_type === 'guest' ? 'bg-[color:var(--gold-soft)] text-[color:var(--gold-strong)]' : 'bg-[color:var(--teal-soft)] text-[color:var(--teal-strong)]'">
               <component :is="product.purchase_type === 'guest' ? UserPlus : Lock" class="h-3.5 w-3.5" />
@@ -73,46 +73,46 @@
             <!-- 1. SKU 批发价 -->
             <template v-if="selectedSku && hasSelectedSkuWholesalePrice">
               <div class="flex flex-wrap items-baseline gap-3">
-                <span class="text-[40px] font-extrabold tabular-nums" :class="selectedSkuWholesaleFinalIsMember ? 'text-[color:var(--gold-strong)]' : 'text-[color:var(--teal-strong)]'">{{ formatPrice(selectedSkuWholesaleFinalPrice!, siteCurrency) }}</span>
-                <span class="font-semibold text-muted-foreground line-through">{{ formatPrice(selectedSku.price_amount, siteCurrency) }}</span>
+                <span class="text-[40px] font-extrabold tabular-nums" :class="selectedSkuWholesaleFinalIsMember ? 'text-[color:var(--gold-strong)]' : 'text-[color:var(--teal-strong)]'">{{ formatPriceForQuantity(selectedSkuWholesaleFinalPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}</span>
+                <span class="font-semibold text-muted-foreground line-through">{{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}</span>
               </div>
               <p class="mt-2 text-sm font-semibold" :class="selectedSkuWholesaleFinalIsMember ? 'text-[color:var(--gold-strong)]' : 'text-[color:var(--teal-strong)]'">
-                {{ selectedSkuWholesaleFinalIsMember ? t('products.memberPriceTag') : t('products.wholesaleTag') }} · {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - Number(selectedSkuWholesaleFinalPrice), siteCurrency) }}
+                {{ selectedSkuWholesaleFinalIsMember ? t('products.memberPriceTag') : t('products.wholesaleTag') }}
               </p>
             </template>
             <!-- 2. SKU 促销价 -->
             <template v-else-if="selectedSku && hasSkuPromotionPrice(selectedSku)">
               <div class="flex flex-wrap items-baseline gap-3">
-                <span v-if="selectedSkuPromotionFinalIsMember" class="text-[40px] font-extrabold tabular-nums text-[color:var(--gold-strong)]">{{ formatPrice(selectedSkuPromotionFinalPrice!, siteCurrency) }}</span>
-                <span v-else class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPrice(selectedSkuPromotionPrice!, siteCurrency) }}</span>
-                <span class="font-semibold text-muted-foreground line-through">{{ formatPrice(selectedSku.price_amount, siteCurrency) }}</span>
+                <span v-if="selectedSkuPromotionFinalIsMember" class="text-[40px] font-extrabold tabular-nums text-[color:var(--gold-strong)]">{{ formatPriceForQuantity(selectedSkuPromotionFinalPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}</span>
+                <span v-else class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPriceForQuantity(selectedSkuPromotionPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}</span>
+                <span class="font-semibold text-muted-foreground line-through">{{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}</span>
               </div>
-              <p v-if="selectedSkuPromotionFinalIsMember" class="mt-2 text-sm font-semibold text-[color:var(--gold-strong)]">{{ t('products.memberPriceTag') }} · {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - Number(selectedSkuPromotionFinalPrice), siteCurrency) }}</p>
-              <p v-else class="mt-2 text-sm font-semibold text-destructive">{{ t('products.saveAmount') }} {{ formatPrice(getSkuPromotionSaveAmount(selectedSku), siteCurrency) }}</p>
+              <p v-if="selectedSkuPromotionFinalIsMember" class="mt-2 text-sm font-semibold text-[color:var(--gold-strong)]">{{ t('products.memberPriceTag') }}</p>
+              <p v-else class="mt-2 text-sm font-semibold text-destructive">{{ t('products.promotionTag') }}</p>
             </template>
             <!-- 3. SKU 会员价 -->
             <template v-else-if="selectedSku && hasMemberPrice">
               <div class="flex flex-wrap items-baseline gap-3">
-                <span class="text-[40px] font-extrabold tabular-nums text-[color:var(--gold-strong)]">{{ formatPrice(selectedSkuMemberPrice!, siteCurrency) }}</span>
-                <span class="font-semibold text-muted-foreground line-through">{{ formatPrice(selectedSku.price_amount, siteCurrency) }}</span>
+                <span class="text-[40px] font-extrabold tabular-nums text-[color:var(--gold-strong)]">{{ formatPriceForQuantity(selectedSkuMemberPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}</span>
+                <span class="font-semibold text-muted-foreground line-through">{{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}</span>
               </div>
-              <p class="mt-2 text-sm font-semibold text-[color:var(--gold-strong)]">{{ t('products.memberPriceTag') }} · {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - selectedSkuMemberPrice!, siteCurrency) }}</p>
+              <p class="mt-2 text-sm font-semibold text-[color:var(--gold-strong)]">{{ t('products.memberPriceTag') }}</p>
             </template>
             <!-- 4. SKU 原价 -->
             <div v-else-if="selectedSku" class="flex flex-wrap items-baseline gap-3">
-              <span class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}</span>
+              <span class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}</span>
             </div>
             <!-- 5. 产品级促销 -->
             <template v-else-if="hasPromotionPrice(product)">
               <div class="flex flex-wrap items-baseline gap-3">
-                <span class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}</span>
-                <span class="font-semibold text-muted-foreground line-through">{{ formatPrice(product.price_amount, siteCurrency) }}</span>
+                <span class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPriceForQuantity(getPromotionPriceAmount(product), quantity, product.price_quantity_basis, siteCurrency) }}</span>
+                <span class="font-semibold text-muted-foreground line-through">{{ formatPriceForQuantity(product.price_amount, quantity, product.price_quantity_basis, siteCurrency) }}</span>
               </div>
-              <p class="mt-2 text-sm font-semibold text-destructive">{{ t('products.saveAmount') }} {{ formatPrice(getPromotionSaveAmount(product), siteCurrency) }}</p>
+              <p class="mt-2 text-sm font-semibold text-destructive">{{ t('products.promotionTag') }}</p>
             </template>
             <!-- 6. 产品级原价 -->
             <div v-else class="flex flex-wrap items-baseline gap-3">
-              <span class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
+              <span class="text-[40px] font-extrabold tabular-nums text-primary">{{ formatPriceForQuantity(product.price_amount, quantity, product.price_quantity_basis, siteCurrency) }}</span>
             </div>
           </div>
 
@@ -187,7 +187,7 @@
 
           <div class="mt-4 flex items-center gap-3 rounded-md bg-[color:var(--teal-soft)] px-[18px] py-3.5 text-[color:var(--teal-strong)]">
             <TicketCheck class="h-[22px] w-[22px] flex-none" />
-            <span class="text-sm font-semibold">{{ product.upstream_fulfillment ? t('productDetail.upstreamDeliveryReassurance') : t('productDetail.deliveryReassurance') }}</span>
+            <span class="text-sm font-semibold">{{ t('productDetail.deliveryReassurance') }}</span>
           </div>
         </div>
       </section>
@@ -286,7 +286,7 @@ const setupMobileBarObserver = () => {
 }
 
 const {
-  getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis,
+  getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantity,
   getFulfillmentTypeLabel, getPurchaseTypeLabel, getStockStatusLabel, getStockBadgeVariant,
   hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
   hasSkuPromotionPrice, getSkuPromotionSaveAmount,

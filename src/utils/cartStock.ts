@@ -120,7 +120,6 @@ export const refreshCartStockSnapshots = async (cartStore: CartStoreLike) => {
     const manualStockLocked = normalizeStockNumber(matchedSku?.manual_stock_locked)
     const manualStockSold = normalizeStockNumber(matchedSku?.manual_stock_sold)
     const autoStockAvailable = normalizeStockNumber(matchedSku?.auto_stock_available)
-    const upstreamStock = normalizeManualStockTotal(matchedSku?.upstream_stock)
     const skuStockEnforced = shouldEnforceSkuStock(product, matchedSku)
     const stockRangeMin = normalizeStockNumber(matchedSku?.stock_range_min)
     const stockRangeMax = normalizeStockNumber(matchedSku?.stock_range_max)
@@ -134,7 +133,6 @@ export const refreshCartStockSnapshots = async (cartStore: CartStoreLike) => {
       skuManualStockLocked: manualStockLocked,
       skuManualStockSold: manualStockSold,
       skuAutoStockAvailable: autoStockAvailable,
-      skuUpstreamStock: upstreamStock,
       skuStockStatus: String(matchedSku?.stock_status || ''),
       skuStockDisplayMode: String(matchedSku?.stock_display_mode || product?.stock_display_mode || ''),
       skuStockDisplay: String(matchedSku?.stock_display || ''),

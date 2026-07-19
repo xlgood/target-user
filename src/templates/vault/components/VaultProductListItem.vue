@@ -32,9 +32,9 @@
       <div class="text-right">
         <template v-if="promo">
           <span class="block text-sm font-extrabold tabular-nums text-primary sm:text-base">{{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}</span>
-          <span class="block text-[11px] font-semibold text-muted-foreground line-through">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
+          <span class="block text-[11px] font-semibold text-muted-foreground line-through">{{ formatPriceForMinimumQuantity(product.price_amount, product.price_quantity_basis, product.min_purchase_quantity, siteCurrency) }}</span>
         </template>
-        <span v-else class="block text-sm font-extrabold tabular-nums text-foreground sm:text-base">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
+        <span v-else class="block text-sm font-extrabold tabular-nums text-foreground sm:text-base">{{ formatPriceForMinimumQuantity(product.price_amount, product.price_quantity_basis, product.min_purchase_quantity, siteCurrency) }}</span>
       </div>
       <button
         v-if="!soldOut && !stockPending"
@@ -62,7 +62,7 @@ const props = withDefaults(defineProps<{ product: any; index?: number }>(), { in
 defineEmits<{ quickBuy: [product: any] }>()
 
 const { t } = useI18n()
-const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
+const { getLocalizedText, siteCurrency, formatPrice, formatPriceForMinimumQuantity } = useLocalized()
 const { getStockStatusLabel, isSoldOut, isStockPending, hasPromotionPrice, getPromotionPriceAmount } = useProductLabels()
 
 const covers = [

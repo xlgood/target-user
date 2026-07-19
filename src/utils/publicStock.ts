@@ -56,16 +56,11 @@ const isQuantityHidden = (product: any, sku: any) => {
 
 export const resolveSkuAvailableStock = (product: any, sku: any): number | null => {
   if (!sku) return 0
-  if (sku?.upstream_stock_unknown === true || sku?.stock_status === STOCK_STATUS_PENDING) return 0
+  if (sku?.stock_status === STOCK_STATUS_PENDING) return 0
   if (isQuantityHidden(product, sku)) {
     const status = normalizeStockStatus(sku?.stock_status, null)
     if (status === STOCK_STATUS_OUT_OF_STOCK) return 0
     return null
-  }
-  if (product?.fulfillment_type === 'upstream') {
-    const upstreamStock = Number(sku?.upstream_stock ?? 0)
-    if (upstreamStock === -1) return null
-    return Math.max(Math.floor(upstreamStock), 0)
   }
   if (product?.fulfillment_type === 'auto') {
     const autoStock = Number(sku?.auto_stock_available ?? 0)

@@ -10,7 +10,6 @@ export interface CartItem {
     skuManualStockLocked?: number
     skuManualStockSold?: number
     skuAutoStockAvailable?: number
-    skuUpstreamStock?: number
     skuStockStatus?: string
     skuStockDisplayMode?: string
     skuStockDisplay?: string
@@ -31,6 +30,7 @@ export interface CartItem {
     purchaseType?: string
     fulfillmentType?: string
     manualFormSchema?: any
+    commentsQuantityFromForm?: boolean
     paymentChannelIds?: number[]
 }
 
@@ -109,7 +109,6 @@ const loadCartItems = (): CartItem[] => {
                     skuManualStockLocked: normalizeOptionalStockNumber(row.skuManualStockLocked ?? row.sku_manual_stock_locked),
                     skuManualStockSold: normalizeOptionalStockNumber(row.skuManualStockSold ?? row.sku_manual_stock_sold),
                     skuAutoStockAvailable: normalizeOptionalStockNumber(row.skuAutoStockAvailable ?? row.sku_auto_stock_available),
-                    skuUpstreamStock: normalizeOptionalStockNumber(row.skuUpstreamStock ?? row.sku_upstream_stock, true),
                     skuStockStatus: normalizeOptionalString(row.skuStockStatus ?? row.sku_stock_status),
                     skuStockDisplayMode: normalizeOptionalString(row.skuStockDisplayMode ?? row.sku_stock_display_mode),
                     skuStockDisplay: normalizeOptionalString(row.skuStockDisplay ?? row.sku_stock_display),
@@ -121,6 +120,7 @@ const loadCartItems = (): CartItem[] => {
                     minPurchaseQuantity: normalizeOptionalLimitNumber(row.minPurchaseQuantity ?? row.min_purchase_quantity),
                     maxPurchaseQuantity: normalizeOptionalLimitNumber(row.maxPurchaseQuantity ?? row.max_purchase_quantity),
                     priceQuantityBasis: normalizePriceQuantityBasis(row.priceQuantityBasis ?? row.price_quantity_basis),
+                    commentsQuantityFromForm: Boolean(row.commentsQuantityFromForm ?? row.comments_quantity_from_form),
                 } as CartItem
             })
             .filter(Boolean) as CartItem[]
@@ -148,7 +148,6 @@ export const useCartStore = defineStore('cart', () => {
             skuManualStockLocked: normalizeOptionalStockNumber(item.skuManualStockLocked),
             skuManualStockSold: normalizeOptionalStockNumber(item.skuManualStockSold),
             skuAutoStockAvailable: normalizeOptionalStockNumber(item.skuAutoStockAvailable),
-            skuUpstreamStock: normalizeOptionalStockNumber(item.skuUpstreamStock, true),
             skuStockStatus: normalizeOptionalString(item.skuStockStatus),
             skuStockDisplayMode: normalizeOptionalString(item.skuStockDisplayMode),
             skuStockDisplay: normalizeOptionalString(item.skuStockDisplay),
@@ -160,6 +159,7 @@ export const useCartStore = defineStore('cart', () => {
             minPurchaseQuantity: normalizeOptionalLimitNumber(item.minPurchaseQuantity),
             maxPurchaseQuantity: normalizeOptionalLimitNumber(item.maxPurchaseQuantity),
             priceQuantityBasis: normalizePriceQuantityBasis(item.priceQuantityBasis),
+            commentsQuantityFromForm: Boolean(item.commentsQuantityFromForm),
         }
         const qty = clampCartQuantity(quantity, normalizedItem.maxPurchaseQuantity, normalizedItem.minPurchaseQuantity)
         const identity = cartIdentity(normalizedItem)
@@ -177,6 +177,7 @@ export const useCartStore = defineStore('cart', () => {
             existing.purchaseType = normalizedItem.purchaseType
             existing.fulfillmentType = normalizedItem.fulfillmentType
             existing.manualFormSchema = normalizedItem.manualFormSchema
+            existing.commentsQuantityFromForm = normalizedItem.commentsQuantityFromForm
             existing.skuId = normalizedItem.skuId
             existing.skuCode = normalizedItem.skuCode
             existing.skuSpecValues = normalizedItem.skuSpecValues
@@ -184,7 +185,6 @@ export const useCartStore = defineStore('cart', () => {
             existing.skuManualStockLocked = normalizedItem.skuManualStockLocked
             existing.skuManualStockSold = normalizedItem.skuManualStockSold
             existing.skuAutoStockAvailable = normalizedItem.skuAutoStockAvailable
-            existing.skuUpstreamStock = normalizedItem.skuUpstreamStock
             existing.skuStockStatus = normalizedItem.skuStockStatus
             existing.skuStockDisplayMode = normalizedItem.skuStockDisplayMode
             existing.skuStockDisplay = normalizedItem.skuStockDisplay
@@ -222,7 +222,6 @@ export const useCartStore = defineStore('cart', () => {
         target.skuManualStockLocked = normalizeOptionalStockNumber(target.skuManualStockLocked)
         target.skuManualStockSold = normalizeOptionalStockNumber(target.skuManualStockSold)
         target.skuAutoStockAvailable = normalizeOptionalStockNumber(target.skuAutoStockAvailable)
-        target.skuUpstreamStock = normalizeOptionalStockNumber(target.skuUpstreamStock, true)
         target.skuStockStatus = normalizeOptionalString(target.skuStockStatus)
         target.skuStockDisplayMode = normalizeOptionalString(target.skuStockDisplayMode)
         target.skuStockDisplay = normalizeOptionalString(target.skuStockDisplay)
@@ -234,6 +233,7 @@ export const useCartStore = defineStore('cart', () => {
         target.minPurchaseQuantity = normalizeOptionalLimitNumber(target.minPurchaseQuantity)
         target.maxPurchaseQuantity = normalizeOptionalLimitNumber(target.maxPurchaseQuantity)
         target.priceQuantityBasis = normalizePriceQuantityBasis(target.priceQuantityBasis)
+        target.commentsQuantityFromForm = Boolean(target.commentsQuantityFromForm)
         persist()
     }
 

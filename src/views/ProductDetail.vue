@@ -85,7 +85,7 @@
                   <Badge :variant="product.fulfillment_type === 'auto' ? 'info' : 'neutral'">
                     <Zap v-if="product.fulfillment_type === 'auto'" class="h-3 w-3" />
                     <Pencil v-else class="h-3 w-3" />
-                    {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
+                    {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
                   </Badge>
 
                   <Badge :variant="getStockBadgeVariant(product.stock_status)">
@@ -112,78 +112,77 @@
                         class="theme-price-lg"
                         :class="selectedSkuWholesaleFinalIsMember ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-300'"
                       >
-                        {{ formatPrice(selectedSkuWholesaleFinalPrice!, siteCurrency) }}
+                        {{ formatPriceForQuantity(selectedSkuWholesaleFinalPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
-                        {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
+                        {{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                       </span>
                     </div>
                     <p
                       class="text-sm font-medium"
                       :class="selectedSkuWholesaleFinalIsMember ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-300'"
                     >
-                      {{ selectedSkuWholesaleFinalIsMember ? t('products.memberPriceTag') : t('products.wholesaleTag') }} ·
-                      {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - Number(selectedSkuWholesaleFinalPrice), siteCurrency) }}
+                      {{ selectedSkuWholesaleFinalIsMember ? t('products.memberPriceTag') : t('products.wholesaleTag') }}
                     </p>
                   </div>
                   <!-- 选中 SKU 且有促销价 -->
                   <div v-else-if="selectedSku && hasSkuPromotionPrice(selectedSku)" class="space-y-2">
                     <div class="flex flex-wrap items-end gap-4">
                       <span v-if="selectedSkuPromotionFinalIsMember" class="theme-price-lg text-amber-600 dark:text-amber-300">
-                        {{ formatPrice(selectedSkuPromotionFinalPrice!, siteCurrency) }}
+                        {{ formatPriceForQuantity(selectedSkuPromotionFinalPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                       </span>
                       <span v-else class="theme-price-lg text-rose-600 dark:text-rose-300">
-                        {{ formatPrice(selectedSkuPromotionPrice!, siteCurrency) }}
+                        {{ formatPriceForQuantity(selectedSkuPromotionPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
-                        {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
+                        {{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                       </span>
                     </div>
                     <p v-if="selectedSkuPromotionFinalIsMember" class="text-sm font-medium text-amber-600 dark:text-amber-300">
-                      {{ t('products.memberPriceTag') }} · {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - Number(selectedSkuPromotionFinalPrice), siteCurrency) }}
+                      {{ t('products.memberPriceTag') }}
                     </p>
                     <p v-else class="text-sm font-medium text-rose-500 dark:text-rose-300">
-                      {{ t('products.saveAmount') }} {{ formatPrice(getSkuPromotionSaveAmount(selectedSku), siteCurrency) }}
+                      {{ t('products.promotionTag') }}
                     </p>
                   </div>
                   <!-- 选中 SKU 有会员价但无促销价 -->
                   <div v-else-if="selectedSku && hasMemberPrice" class="space-y-2">
                     <div class="flex flex-wrap items-end gap-4">
                       <span class="theme-price-lg text-amber-600 dark:text-amber-300">
-                        {{ formatPrice(selectedSkuMemberPrice!, siteCurrency) }}
+                        {{ formatPriceForQuantity(selectedSkuMemberPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
-                        {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
+                        {{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                       </span>
                     </div>
                     <p class="text-sm font-medium text-amber-600 dark:text-amber-300">
-                      {{ t('products.memberPriceTag') }} · {{ t('products.saveAmount') }} {{ formatPrice(Number(selectedSku.price_amount) - selectedSkuMemberPrice!, siteCurrency) }}
+                      {{ t('products.memberPriceTag') }}
                     </p>
                   </div>
                   <!-- 选中 SKU 但无促销价也无会员价 -->
                   <div v-else-if="selectedSku" class="flex items-end gap-4">
                     <span class="theme-price-lg text-primary">
-                      {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
+                      {{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                   </div>
                   <!-- 未选 SKU，产品级有促销价 -->
                   <div v-else-if="hasPromotionPrice(product)" class="space-y-2">
                     <div class="flex flex-wrap items-end gap-4">
                       <span class="theme-price-lg text-rose-600 dark:text-rose-300">
-                        {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
+                        {{ formatPriceForQuantity(getPromotionPriceAmount(product), quantity, product.price_quantity_basis, siteCurrency) }}
                       </span>
                       <span class="theme-price-original">
-                        {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
+                        {{ formatPriceForQuantity(product.price_amount, quantity, product.price_quantity_basis, siteCurrency) }}
                       </span>
                     </div>
                     <p class="text-sm font-medium text-rose-500 dark:text-rose-300">
-                      {{ t('products.saveAmount') }} {{ formatPrice(getPromotionSaveAmount(product), siteCurrency) }}
+                      {{ t('products.promotionTag') }}
                     </p>
                   </div>
                   <!-- 未选 SKU，无促销 -->
                   <div v-else class="flex items-end gap-4">
                     <span class="theme-price-lg text-primary">
-                      {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
+                      {{ formatPriceForQuantity(product.price_amount, quantity, product.price_quantity_basis, siteCurrency) }}
                     </span>
                   </div>
                 </div>
@@ -458,7 +457,7 @@ const setupMobileBarObserver = () => {
 
 // 全部业务逻辑由 useProductDetail 提供（与 vault 模板共用，保证功能一致）
 const {
-  getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis,
+  getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantity,
   getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel,
   hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
   hasSkuPromotionPrice, getSkuPromotionSaveAmount,

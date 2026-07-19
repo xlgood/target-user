@@ -33,7 +33,7 @@
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <RouterLink :to="`/products/${item.slug}`" class="block truncate font-bold hover:text-primary">{{ getLocalizedText(item.title) }}</RouterLink>
-                <p class="mt-1 text-[13px] text-muted-foreground">{{ t('cart.priceLabel') }}：{{ formatPrice(item.priceAmount, totalCurrency) }}</p>
+                <p class="mt-1 text-[13px] text-muted-foreground">{{ t('cart.priceLabel') }}：{{ itemSubtotal(item) }}</p>
                 <p v-if="itemSkuDisplay(item)" class="mt-1 text-[13px] text-muted-foreground">{{ t('cart.skuLabel') }}：{{ itemSkuDisplay(item) }}</p>
                 <p v-if="itemStockHint(item)" class="mt-1 text-[13px] text-muted-foreground">{{ itemStockHint(item) }}</p>
                 <div class="mt-2 flex flex-wrap gap-1.5">

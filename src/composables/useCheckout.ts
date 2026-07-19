@@ -36,6 +36,7 @@ interface ManualFormProduct {
   title: any
   fields: ManualFormField[]
   skuCount: number
+  commentQuantityItems: CartItem[]
 }
 
 /**
@@ -224,7 +225,8 @@ export function useCheckout() {
       const amountCents = amountToCents(item.priceAmount)
       const qty = parseInteger(item.quantity)
       if (amountCents === null || qty === null) return sum
-      return sum + amountCents * qty
+      const basis = Math.max(1, Math.floor(Number(item.priceQuantityBasis) || 1))
+      return sum + Math.round(amountCents * qty / basis)
     }, 0)
     return centsToAmount(totalCents)
   })
@@ -376,6 +378,7 @@ export function useCheckout() {
       const existing = grouped.get(normalizedProductId)
       if (existing) {
         existing.skuCount += 1
+        if (item.commentsQuantityFromForm) existing.commentQuantityItems.push(item)
         return
       }
       grouped.set(normalizedProductId, {
@@ -384,6 +387,7 @@ export function useCheckout() {
         title: item.title,
         fields,
         skuCount: 1,
+        commentQuantityItems: item.commentsQuantityFromForm ? [item] : [],
       })
     })
     return Array.from(grouped.values())
@@ -509,6 +513,29 @@ export function useCheckout() {
 
   const manualFieldError = (itemKey: string, fieldKey: string) => {
     return manualFormValidation.value.errors[manualFieldErrorKey(itemKey, fieldKey)] || ''
+  }
+
+  const nonEmptyCommentLineCount = (value: unknown) => String(value ?? '')
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0)
+    .length
+
+  const syncCommentQuantities = () => {
+    manualFormProducts.value.forEach((product) => {
+      if (product.commentQuantityItems.length === 0) return
+      const count = nonEmptyCommentLineCount(manualFormData.value[product.itemKey]?.comments)
+      if (count <= 0) return
+      product.commentQuantityItems.forEach((item) => {
+        if (isBuyNowMode.value) {
+          if (buyNowStore.item?.productId === item.productId && normalizeSkuId(buyNowStore.item.skuId) === normalizeSkuId(item.skuId) && buyNowStore.item.quantity === count) {
+            return
+          }
+          buyNowStore.setItem({ ...item, quantity: count })
+        } else if (item.quantity !== count) {
+          cartStore.updateQuantity(item.productId, count, item.skuId)
+        }
+      })
+    })
   }
 
   const buildManualFormDataPayload = () => {
@@ -761,6 +788,7 @@ export function useCheckout() {
     submitAttempted.value = true
     error.value = ''
     previewError.value = ''
+    syncCommentQuantities()
     if (!canSubmit.value) {
       error.value = submitBlockedReason.value || t('checkout.errors.submitFailed')
       return
@@ -814,6 +842,12 @@ export function useCheckout() {
     },
     { deep: true }
   )
+
+  // A custom-comment line is one billable item. Keep the checkout preview in
+  // step with the form while avoiding redundant cart writes from deep watches.
+  watch(manualFormFingerprint, () => {
+    syncCommentQuantities()
+  })
 
   watch(walletOnlyPayment, (v) => {
     if (v) useBalance.value = true
@@ -977,7 +1011,6 @@ export function useCheckout() {
   const shouldEnforceItemStock = (item: CartItem) => {
     if (item.skuStockQuantityHidden === true) return false
     if (item.fulfillmentType === 'auto') return true
-    if (item.fulfillmentType === 'upstream') return true
     if (item.fulfillmentType !== 'manual') return false
     if (!hasItemStockSnapshot(item)) return false
     const total = normalizeManualStockTotal(item.skuManualStockTotal)
@@ -992,11 +1025,6 @@ export function useCheckout() {
       return item.skuStockStatus === 'out_of_stock' ? 0 : null
     }
     if (!shouldEnforceItemStock(item)) return null
-    if (item.fulfillmentType === 'upstream') {
-      const upstreamStock = Number(item.skuUpstreamStock ?? 0)
-      if (upstreamStock === -1) return null // 无限库存
-      return Math.max(upstreamStock, 0)
-    }
     if (item.fulfillmentType === 'auto') {
       return normalizeStockNumber(item.skuAutoStockAvailable)
     }

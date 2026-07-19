@@ -29,12 +29,17 @@ export function useCart() {
   const totalItems = computed(() => cartStore.totalItems)
   const quantityWarnings = ref<Record<string, string>>({})
 
+  const lineTotalCents = (item: CartItem) => {
+    const amountCents = amountToCents(item.priceAmount)
+    const qty = parseInteger(item.quantity)
+    if (amountCents === null || qty === null) return 0
+    const basis = Math.max(1, Math.floor(Number(item.priceQuantityBasis) || 1))
+    return Math.round(amountCents * qty / basis)
+  }
+
   const totalAmount = computed(() => {
     const totalCents = cartItems.value.reduce((sum, item) => {
-      const amountCents = amountToCents(item.priceAmount)
-      const qty = parseInteger(item.quantity)
-      if (amountCents === null || qty === null) return sum
-      return sum + amountCents * qty
+      return sum + lineTotalCents(item)
     }, 0)
     return centsToAmount(totalCents)
   })
@@ -59,8 +64,7 @@ export function useCart() {
     if (amountCents === null || qty === null) {
       return formatPrice('-', totalCurrency.value)
     }
-    const basis = Math.max(1, Math.floor(Number(item.priceQuantityBasis) || 1))
-    return formatPrice(centsToAmount(Math.round(amountCents * qty / basis)), totalCurrency.value)
+    return formatPrice(centsToAmount(lineTotalCents(item)), totalCurrency.value)
   }
 
   const updateQty = (item: CartItem, qty: number) => {
@@ -135,7 +139,6 @@ export function useCart() {
   const shouldEnforceItemStock = (item: CartItem) => {
     if (item.skuStockQuantityHidden === true) return false
     if (item.fulfillmentType === 'auto') return true
-    if (item.fulfillmentType === 'upstream') return true
     if (item.fulfillmentType !== 'manual') return false
     if (!hasItemStockSnapshot(item)) return false
     const total = normalizeManualStockTotal(item.skuManualStockTotal)
@@ -150,11 +153,6 @@ export function useCart() {
       return item.skuStockStatus === 'out_of_stock' ? 0 : null
     }
     if (!shouldEnforceItemStock(item)) return null
-    if (item.fulfillmentType === 'upstream') {
-      const upstreamStock = Number(item.skuUpstreamStock ?? 0)
-      if (upstreamStock === -1) return null
-      return Math.max(upstreamStock, 0)
-    }
     if (item.fulfillmentType === 'auto') {
       return normalizeStockNumber(item.skuAutoStockAvailable)
     }

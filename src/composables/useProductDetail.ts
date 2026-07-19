@@ -33,7 +33,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   const userAuthStore = useUserAuthStore()
   const userProfileStore = useUserProfileStore()
 
-  const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
+  const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantity } = useLocalized()
   const {
     getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel,
     hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
@@ -222,7 +222,6 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     if (!sku) return false
     if (sku?.stock_quantity_hidden === true || product.value?.stock_quantity_hidden === true) return false
     if (product.value?.fulfillment_type === 'auto') return true
-    if (product.value?.fulfillment_type === 'upstream') return true
     if (product.value?.fulfillment_type !== 'manual') return false
     const total = normalizeManualStockTotal(sku?.manual_stock_total)
     if (total === -1) return false
@@ -231,7 +230,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
 
   const skuAvailableStock = (sku: any) => {
     if (!sku) return 0
-    if (sku?.upstream_stock_unknown === true || sku?.stock_status === 'pending_stock') return 0
+    if (sku?.stock_status === 'pending_stock') return 0
     if (!shouldEnforceSkuStock(sku) && !sku?.stock_quantity_hidden) return null
     return resolveSkuAvailableStock(product.value, sku)
   }
@@ -320,7 +319,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     if (!product.value) return false
     if (activeSkus.value.length === 0) return false
     if (product.value.is_sold_out) return false
-    if (product.value.upstream_stock_unknown || product.value.stock_status === 'pending_stock') return false
+    if (product.value.stock_status === 'pending_stock') return false
     if (requiresSKUSelection.value) return false
     if (product.value.stock_status === 'out_of_stock') return false
     if (selectedSku.value && !isSkuPurchasable(selectedSku.value)) return false
@@ -329,7 +328,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const cannotPurchaseReason = computed(() => {
     if (!product.value) return ''
-    if (product.value.upstream_stock_unknown || product.value.stock_status === 'pending_stock') return t('productDetail.stockPending')
+    if (product.value.stock_status === 'pending_stock') return t('productDetail.stockPending')
     if (requiresLogin.value) return ''
     if (requiresSKUSelection.value) return t('productDetail.skuRequired')
     if (stockBelowMinPurchase.value) return t('productDetail.stockBelowMinPurchase', { count: quantityEffectiveMin.value })
@@ -400,7 +399,6 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     skuManualStockLocked: normalizeStockNumber(sku?.manual_stock_locked),
     skuManualStockSold: normalizeStockNumber(sku?.manual_stock_sold),
     skuAutoStockAvailable: normalizeStockNumber(sku?.auto_stock_available),
-    skuUpstreamStock: normalizeManualStockTotal(sku?.upstream_stock),
     skuStockStatus: String(sku?.stock_status || ''),
     skuStockDisplayMode: String(sku?.stock_display_mode || product.value?.stock_display_mode || ''),
     skuStockDisplay: String(sku?.stock_display || ''),
@@ -417,8 +415,10 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     minPurchaseQuantity: normalizeOptionalLimitNumber(product.value.min_purchase_quantity) ?? undefined,
     maxPurchaseQuantity: normalizeOptionalLimitNumber(product.value.max_purchase_quantity) ?? undefined,
     purchaseType: product.value.purchase_type,
-    fulfillmentType: product.value.fulfillment_type,
+    fulfillmentType: product.value.fulfillment_type === 'upstream' ? 'manual' : product.value.fulfillment_type,
     manualFormSchema: product.value.manual_form_schema || {},
+    commentsQuantityFromForm: Array.isArray(product.value?.manual_form_schema?.fields)
+      && product.value.manual_form_schema.fields.some((field: any) => String(field?.key || '').trim() === 'comments'),
     paymentChannelIds: Array.isArray(product.value.payment_channel_ids) && product.value.payment_channel_ids.length > 0 ? product.value.payment_channel_ids : undefined,
     quantity: quantity.value,
   })
@@ -494,13 +494,13 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const mobileBarMemberPriceDisplay = computed(() => {
     if (hasSelectedSkuWholesalePrice.value && selectedSkuWholesaleFinalIsMember.value) {
-      return formatPrice(selectedSkuWholesaleFinalPrice.value, siteCurrency.value)
+      return formatPriceForQuantity(selectedSkuWholesaleFinalPrice.value, quantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
     }
     if (selectedSku.value && hasSkuPromotionPrice(selectedSku.value) && selectedSkuPromotionFinalIsMember.value) {
-      return formatPrice(selectedSkuPromotionFinalPrice.value, siteCurrency.value)
+      return formatPriceForQuantity(selectedSkuPromotionFinalPrice.value, quantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
     }
     if (!selectedSkuMemberPrice.value) return ''
-    return formatPrice(selectedSkuMemberPrice.value, siteCurrency.value)
+    return formatPriceForQuantity(selectedSkuMemberPrice.value, quantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
   })
   const mobileBarShowSkuPromotionPrice = computed(() => {
     if (mobileBarShowMemberPrice.value) return false
@@ -509,7 +509,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const mobileBarSkuPromotionPriceDisplay = computed(() => {
     if (!selectedSku.value) return ''
-    return formatPrice(getSkuPromotionPriceAmount(selectedSku.value), siteCurrency.value)
+    return formatPriceForQuantity(getSkuPromotionPriceAmount(selectedSku.value), quantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
   })
   const mobileBarShowSkuPrice = computed(() => {
     if (mobileBarShowMemberPrice.value || mobileBarShowSkuPromotionPrice.value) return false
@@ -517,7 +517,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const mobileBarSkuPriceDisplay = computed(() => {
     if (!selectedSku.value) return ''
-    return formatPriceForQuantityBasis(selectedSku.value.price_amount, selectedSku.value.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
+    return formatPriceForQuantity(selectedSku.value.price_amount, quantity.value, selectedSku.value.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
   })
   const mobileBarShowProductPromotionPrice = computed(() => {
     if (selectedSku.value) return false
@@ -525,11 +525,11 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const mobileBarProductPromotionPriceDisplay = computed(() => {
     if (!product.value) return ''
-    return formatPrice(getPromotionPriceAmount(product.value), siteCurrency.value)
+    return formatPriceForQuantity(getPromotionPriceAmount(product.value), quantity.value, product.value.price_quantity_basis, siteCurrency.value)
   })
   const mobileBarProductPriceDisplay = computed(() => {
     if (!product.value) return ''
-    return formatPriceForQuantityBasis(product.value.price_amount, product.value.price_quantity_basis, siteCurrency.value)
+    return formatPriceForQuantity(product.value.price_amount, quantity.value, product.value.price_quantity_basis, siteCurrency.value)
   })
 
   const goLogin = () => {
@@ -679,7 +679,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
 
   return {
     // 国际化/格式化（模板需要）
-    getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis,
+    getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantity,
     getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel,
     hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
     hasSkuPromotionPrice, getSkuPromotionPriceAmount, getSkuPromotionSaveAmount,

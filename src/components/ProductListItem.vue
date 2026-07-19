@@ -47,7 +47,7 @@
       <div class="flex flex-wrap items-center gap-1">
         <!-- Mobile: fulfillment + stock warning -->
         <Badge class="sm:hidden" size="xs" :variant="product.fulfillment_type === 'auto' ? 'info' : 'neutral'">
-          {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
+          {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
         </Badge>
         <Badge v-if="product.stock_status === 'out_of_stock' || product.stock_status === 'low_stock'"
           class="sm:hidden" size="xs" :variant="getStockBadgeVariant(product.stock_status)">
@@ -59,7 +59,7 @@
           {{ getPurchaseTypeLabel(product.purchase_type) }}
         </Badge>
         <Badge class="hidden sm:inline-flex" size="xs" :variant="product.fulfillment_type === 'auto' ? 'info' : 'neutral'">
-          {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
+          {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
         </Badge>
         <Badge class="hidden sm:inline-flex" size="xs" :variant="getStockBadgeVariant(product.stock_status)">
           {{ getStockStatusLabel(product) }}
@@ -76,13 +76,13 @@
             {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
           </span>
           <div class="flex items-center gap-1">
-            <span class="text-[10px] text-muted-foreground line-through">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
+            <span class="text-[10px] text-muted-foreground line-through">{{ formatPriceForMinimumQuantity(product.price_amount, product.price_quantity_basis, product.min_purchase_quantity, siteCurrency) }}</span>
             <Badge variant="danger" size="xs" class="px-1 py-0 text-[9px] leading-tight">{{ t('products.promotionTag') }}</Badge>
           </div>
         </div>
         <div v-else>
           <span class="text-xs sm:text-sm font-bold text-foreground whitespace-nowrap">
-            {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
+            {{ formatPriceForMinimumQuantity(product.price_amount, product.price_quantity_basis, product.min_purchase_quantity, siteCurrency) }}
           </span>
           <div v-if="hasWholesalePrices(product)">
             <Badge variant="success" size="xs" class="px-1 py-0 text-[9px] leading-tight">{{ t('products.wholesaleTag') }}</Badge>
@@ -136,6 +136,6 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
+const { getLocalizedText, siteCurrency, formatPrice, formatPriceForMinimumQuantity } = useLocalized()
 const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel, isSoldOut, isStockPending, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules, hasWholesalePrices } = useProductLabels()
 </script>

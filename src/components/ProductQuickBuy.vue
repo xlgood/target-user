@@ -91,7 +91,7 @@
 
                 <div class="mt-1.5 flex flex-wrap items-center gap-1">
                   <Badge :variant="product.fulfillment_type === 'auto' ? 'info' : 'neutral'" size="xs">
-                    {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
+                    {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
                   </Badge>
                   <Badge :variant="getStockBadgeVariant(product.stock_status)" size="xs">
                     {{ getStockStatusLabel(product) }}
@@ -111,10 +111,10 @@
                       class="text-lg md:text-xl font-bold"
                       :class="selectedSkuWholesaleFinalIsMember ? 'text-amber-600 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-400'"
                     >
-                      {{ formatPrice(selectedSkuWholesaleFinalPrice!, siteCurrency) }}
+                      {{ formatPriceForQuantity(selectedSkuWholesaleFinalPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                     <span class="ml-1.5 text-xs text-muted-foreground line-through">
-                      {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
+                      {{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                   <template v-else-if="selectedSku && hasSkuPromotionPrice(selectedSku)">
@@ -122,36 +122,36 @@
                       class="text-lg md:text-xl font-bold"
                       :class="selectedSkuPromotionFinalIsMember ? 'text-amber-600 dark:text-amber-300' : 'text-rose-600 dark:text-rose-400'"
                     >
-                      {{ formatPrice(selectedSkuPromotionFinalPrice!, siteCurrency) }}
+                      {{ formatPriceForQuantity(selectedSkuPromotionFinalPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                     <span class="ml-1.5 text-xs text-muted-foreground line-through">
-                      {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
+                      {{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                   <template v-else-if="selectedSku && hasMemberPrice">
                     <span class="text-lg md:text-xl font-bold text-amber-600 dark:text-amber-300">
-                      {{ formatPrice(selectedSkuMemberPrice!, siteCurrency) }}
+                      {{ formatPriceForQuantity(selectedSkuMemberPrice!, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                     <span class="ml-1.5 text-xs text-muted-foreground line-through">
-                      {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
+                      {{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                   <template v-else-if="selectedSku">
                     <span class="text-lg md:text-xl font-bold text-primary">
-                      {{ formatPriceForQuantityBasis(selectedSku.price_amount, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
+                      {{ formatPriceForQuantity(selectedSku.price_amount, quantity, selectedSku.price_quantity_basis ?? product?.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                   <template v-else-if="hasPromotionPrice(product)">
                     <span class="text-lg md:text-xl font-bold text-rose-600 dark:text-rose-400">
-                      {{ formatPrice(getPromotionPriceAmount(product), siteCurrency) }}
+                      {{ formatPriceForQuantity(getPromotionPriceAmount(product), quantity, product.price_quantity_basis, siteCurrency) }}
                     </span>
                     <span class="ml-1.5 text-xs text-muted-foreground line-through">
-                      {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
+                      {{ formatPriceForQuantity(product.price_amount, quantity, product.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                   <template v-else>
                     <span class="text-lg md:text-xl font-bold text-primary">
-                      {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
+                      {{ formatPriceForQuantity(product.price_amount, quantity, product.price_quantity_basis, siteCurrency) }}
                     </span>
                   </template>
                 </div>
@@ -362,7 +362,7 @@ const buyNowStore = useBuyNowStore()
 const userAuthStore = useUserAuthStore()
 const userProfileStore = useUserProfileStore()
 
-const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
+const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantity } = useLocalized()
 const {
   getFulfillmentTypeLabel,
   getStockBadgeVariant,
@@ -555,7 +555,6 @@ const shouldEnforceSkuStock = (sku: any) => {
   if (!sku) return false
   if (sku?.stock_quantity_hidden === true || props.product?.stock_quantity_hidden === true) return false
   if (props.product?.fulfillment_type === 'auto') return true
-  if (props.product?.fulfillment_type === 'upstream') return true
   if (props.product?.fulfillment_type !== 'manual') return false
   const total = normalizeManualStockTotal(sku?.manual_stock_total)
   return total !== -1
@@ -563,7 +562,7 @@ const shouldEnforceSkuStock = (sku: any) => {
 
 const skuAvailableStock = (sku: any) => {
   if (!sku) return 0
-  if (sku?.upstream_stock_unknown === true || sku?.stock_status === 'pending_stock') return 0
+  if (sku?.stock_status === 'pending_stock') return 0
   if (!shouldEnforceSkuStock(sku) && !sku?.stock_quantity_hidden) return null
   return resolveSkuAvailableStock(props.product, sku)
 }
@@ -747,7 +746,6 @@ const handleAddToCart = () => {
     skuManualStockLocked: normalizeStockNumber(sku?.manual_stock_locked),
     skuManualStockSold: normalizeStockNumber(sku?.manual_stock_sold),
     skuAutoStockAvailable: normalizeStockNumber(sku?.auto_stock_available),
-    skuUpstreamStock: normalizeManualStockTotal(sku?.upstream_stock),
     skuStockStatus: String(sku?.stock_status || ''),
     skuStockDisplayMode: String(sku?.stock_display_mode || props.product?.stock_display_mode || ''),
     skuStockDisplay: String(sku?.stock_display || ''),
@@ -764,8 +762,10 @@ const handleAddToCart = () => {
     minPurchaseQuantity: normalizeOptionalLimitNumber(props.product.min_purchase_quantity) ?? undefined,
     maxPurchaseQuantity: normalizeOptionalLimitNumber(props.product.max_purchase_quantity) ?? undefined,
     purchaseType: props.product.purchase_type,
-    fulfillmentType: props.product.fulfillment_type,
+    fulfillmentType: props.product.fulfillment_type === 'upstream' ? 'manual' : props.product.fulfillment_type,
     manualFormSchema: props.product.manual_form_schema || {},
+    commentsQuantityFromForm: Array.isArray(props.product?.manual_form_schema?.fields)
+      && props.product.manual_form_schema.fields.some((field: any) => String(field?.key || '').trim() === 'comments'),
     paymentChannelIds: Array.isArray(props.product.payment_channel_ids) && props.product.payment_channel_ids.length > 0 ? props.product.payment_channel_ids : undefined,
     quantity: 1,
   }, quantity.value)
@@ -802,7 +802,6 @@ const handleBuyNow = () => {
     skuManualStockLocked: normalizeStockNumber(sku?.manual_stock_locked),
     skuManualStockSold: normalizeStockNumber(sku?.manual_stock_sold),
     skuAutoStockAvailable: normalizeStockNumber(sku?.auto_stock_available),
-    skuUpstreamStock: normalizeManualStockTotal(sku?.upstream_stock),
     skuStockStatus: String(sku?.stock_status || ''),
     skuStockDisplayMode: String(sku?.stock_display_mode || props.product?.stock_display_mode || ''),
     skuStockDisplay: String(sku?.stock_display || ''),
@@ -819,8 +818,10 @@ const handleBuyNow = () => {
     minPurchaseQuantity: normalizeOptionalLimitNumber(props.product.min_purchase_quantity) ?? undefined,
     maxPurchaseQuantity: normalizeOptionalLimitNumber(props.product.max_purchase_quantity) ?? undefined,
     purchaseType: props.product.purchase_type,
-    fulfillmentType: props.product.fulfillment_type,
+    fulfillmentType: props.product.fulfillment_type === 'upstream' ? 'manual' : props.product.fulfillment_type,
     manualFormSchema: props.product.manual_form_schema || {},
+    commentsQuantityFromForm: Array.isArray(props.product?.manual_form_schema?.fields)
+      && props.product.manual_form_schema.fields.some((field: any) => String(field?.key || '').trim() === 'comments'),
     paymentChannelIds: Array.isArray(props.product.payment_channel_ids) && props.product.payment_channel_ids.length > 0 ? props.product.payment_channel_ids : undefined,
     quantity: quantity.value,
   })

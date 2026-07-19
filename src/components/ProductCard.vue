@@ -62,7 +62,7 @@
           size="xs"
           :variant="product.fulfillment_type === 'auto' ? 'info' : 'neutral'"
         >
-          {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
+          {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
         </Badge>
 
         <!-- Desktop: show all badges -->
@@ -83,7 +83,7 @@
         >
           <Zap v-if="product.fulfillment_type === 'auto'" class="h-3 w-3" />
           <Pencil v-else class="h-3 w-3" />
-          {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
+          {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
         </Badge>
 
         <Badge class="hidden md:inline-flex" size="xs" :variant="getStockBadgeVariant(product.stock_status)">
@@ -108,15 +108,15 @@
           <span
             v-else
             class="theme-price-sm"
-            :aria-label="t('products.priceAria', { price: formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) })"
+            :aria-label="t('products.priceAria', { price: formatPriceForMinimumQuantity(product.price_amount, product.price_quantity_basis, product.min_purchase_quantity, siteCurrency) })"
           >
-            {{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}
+            {{ formatPriceForMinimumQuantity(product.price_amount, product.price_quantity_basis, product.min_purchase_quantity, siteCurrency) }}
           </span>
           <div v-if="hasPromotionPrice(product)" class="mt-0.5 flex flex-wrap items-center gap-1.5">
             <span
               class="hidden md:inline text-xs text-muted-foreground opacity-80 line-through"
-              :aria-label="t('products.originalPriceAria', { price: formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) })"
-            >{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
+              :aria-label="t('products.originalPriceAria', { price: formatPriceForMinimumQuantity(product.price_amount, product.price_quantity_basis, product.min_purchase_quantity, siteCurrency) })"
+            >{{ formatPriceForMinimumQuantity(product.price_amount, product.price_quantity_basis, product.min_purchase_quantity, siteCurrency) }}</span>
             <Badge variant="danger" size="xs">
               {{ t('products.promotionTag') }}
             </Badge>
@@ -189,7 +189,7 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
-const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
+const { getLocalizedText, siteCurrency, formatPrice, formatPriceForMinimumQuantity } = useLocalized()
 const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel, isSoldOut, isStockPending, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules, hasWholesalePrices } = useProductLabels()
 
 const imageErrored = ref(false)

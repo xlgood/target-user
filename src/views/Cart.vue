@@ -44,7 +44,7 @@
                     >
                       {{ getLocalizedText(item.title) }}
                     </router-link>
-                    <p class="mt-1 text-sm text-muted-foreground">{{ t('cart.priceLabel') }}：{{ formatPrice(item.priceAmount, totalCurrency) }}</p>
+                    <p class="mt-1 text-sm text-muted-foreground">{{ t('cart.priceLabel') }}：{{ itemSubtotal(item) }}</p>
                     <p v-if="itemSkuDisplay(item)" class="mt-1 text-xs text-muted-foreground truncate">{{ t('cart.skuLabel') }}：{{ itemSkuDisplay(item) }}</p>
                     <p v-if="itemStockHint(item)" class="mt-1 text-xs text-muted-foreground">{{ itemStockHint(item) }}</p>
                     <div class="mt-2 md:mt-3 flex flex-wrap gap-2">

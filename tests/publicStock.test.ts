@@ -46,11 +46,9 @@ test('range public stock returns bucket without exact count', () => {
   assert.deepEqual(resolveSkuStockDisplay(product, sku), { kind: 'range', min: 21, max: 50 })
 })
 
-test('pending upstream stock is unavailable and never shown as unlimited', () => {
-  const product = { fulfillment_type: 'manual', upstream_stock_unknown: true }
+test('pending stock is unavailable and never shown as unlimited', () => {
+  const product = { fulfillment_type: 'manual' }
   const sku = {
-    upstream_stock: 0,
-    upstream_stock_unknown: true,
     stock_status: 'pending_stock',
   }
 

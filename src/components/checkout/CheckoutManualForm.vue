@@ -113,6 +113,7 @@ interface ManualFormProduct {
   title: any
   fields: ManualFormField[]
   skuCount: number
+  commentQuantityItems: any[]
 }
 
 const props = defineProps<{

@@ -28,13 +28,20 @@ export function useLocalized() {
     return `${displayAmount} ${cur}`
   }
 
-  const formatPriceForQuantityBasis = (amount: any, basis: any, currency?: any): string => {
-    const price = formatPrice(amount, currency)
+  const formatPriceForQuantity = (amount: any, quantity: any, basis: any, currency?: any): string => {
+    const amountCents = amountToCents(amount)
+    if (amountCents === null) return formatPrice(amount, currency)
+    const normalizedQuantity = Math.max(1, Math.floor(Number(quantity) || 1))
     const normalizedBasis = Math.max(1, Math.floor(Number(basis) || 1))
-    return normalizedBasis === 1 ? price : `${price} / ${normalizedBasis}`
+    const totalCents = Math.round(amountCents * normalizedQuantity / normalizedBasis)
+    return formatPrice(centsToAmount(totalCents), currency)
   }
 
-  return { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis }
+  const formatPriceForMinimumQuantity = (amount: any, basis: any, minimum: any, currency?: any): string => {
+    return formatPriceForQuantity(amount, Math.max(1, Math.floor(Number(minimum) || 1)), basis, currency)
+  }
+
+  return { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantity, formatPriceForMinimumQuantity }
 }
 
 export function useProductLabels() {
@@ -44,8 +51,7 @@ export function useProductLabels() {
     return purchaseType === 'guest' ? t('productPurchase.guest') : t('productPurchase.member')
   }
 
-  const getFulfillmentTypeLabel = (fulfillmentType: string, upstreamFulfillment = false) => {
-    if (upstreamFulfillment) return t('products.fulfillmentType.upstream')
+  const getFulfillmentTypeLabel = (fulfillmentType: string) => {
     return fulfillmentType === 'auto' ? t('products.fulfillmentType.auto') : t('products.fulfillmentType.manual')
   }
 
@@ -84,7 +90,7 @@ export function useProductLabels() {
   }
 
   const isSoldOut = (product: any) => Boolean(product?.is_sold_out || product?.stock_status === 'out_of_stock')
-  const isStockPending = (product: any) => Boolean(product?.upstream_stock_unknown || product?.stock_status === 'pending_stock')
+  const isStockPending = (product: any) => product?.stock_status === 'pending_stock'
 
   const parsePriceAmount = (amount: any) => amountToCents(amount)
 
