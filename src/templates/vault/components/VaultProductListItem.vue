@@ -37,7 +37,7 @@
         <span v-else class="block text-sm font-extrabold tabular-nums text-foreground sm:text-base">{{ formatPriceForQuantityBasis(product.price_amount, product.price_quantity_basis, siteCurrency) }}</span>
       </div>
       <button
-        v-if="!soldOut"
+        v-if="!soldOut && !stockPending"
         type="button"
         class="grid h-9 w-9 flex-none place-items-center rounded-full bg-primary text-white transition hover:bg-primary/90"
         :aria-label="t('products.quickBuyAria')"
@@ -63,7 +63,7 @@ defineEmits<{ quickBuy: [product: any] }>()
 
 const { t } = useI18n()
 const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
-const { getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount } = useProductLabels()
+const { getStockStatusLabel, isSoldOut, isStockPending, hasPromotionPrice, getPromotionPriceAmount } = useProductLabels()
 
 const covers = [
   'bg-[linear-gradient(135deg,#7b74f2,var(--red))]',
@@ -77,6 +77,7 @@ const coverClass = computed(() => covers[(props.index ?? 0) % covers.length])
 const title = computed(() => getLocalizedText(props.product?.title))
 const categoryName = computed(() => getLocalizedText(props.product?.category?.name))
 const soldOut = computed(() => isSoldOut(props.product))
+const stockPending = computed(() => isStockPending(props.product))
 const promo = computed(() => hasPromotionPrice(props.product))
 
 const imageErrored = ref(false)
@@ -91,6 +92,9 @@ const coverImage = computed(() => {
 const stockPill = computed<{ tone: string; icon: Component; label: string }>(() => {
   if (soldOut.value) {
     return { tone: 'bg-secondary text-muted-foreground', icon: XCircle, label: t('products.stockStatus.outOfStock') }
+  }
+  if (stockPending.value) {
+    return { tone: 'bg-[color:var(--gold-soft)] text-[color:var(--gold-strong)]', icon: AlarmClock, label: t('products.stockStatus.pendingStock') }
   }
   if (props.product?.stock_status === 'low_stock') {
     return { tone: 'bg-[color:var(--gold-soft)] text-[color:var(--gold-strong)]', icon: AlarmClock, label: getStockStatusLabel(props.product) }

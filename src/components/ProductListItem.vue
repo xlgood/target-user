@@ -47,7 +47,7 @@
       <div class="flex flex-wrap items-center gap-1">
         <!-- Mobile: fulfillment + stock warning -->
         <Badge class="sm:hidden" size="xs" :variant="product.fulfillment_type === 'auto' ? 'info' : 'neutral'">
-          {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
+          {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
         </Badge>
         <Badge v-if="product.stock_status === 'out_of_stock' || product.stock_status === 'low_stock'"
           class="sm:hidden" size="xs" :variant="getStockBadgeVariant(product.stock_status)">
@@ -59,7 +59,7 @@
           {{ getPurchaseTypeLabel(product.purchase_type) }}
         </Badge>
         <Badge class="hidden sm:inline-flex" size="xs" :variant="product.fulfillment_type === 'auto' ? 'info' : 'neutral'">
-          {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
+          {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
         </Badge>
         <Badge class="hidden sm:inline-flex" size="xs" :variant="getStockBadgeVariant(product.stock_status)">
           {{ getStockStatusLabel(product) }}
@@ -99,7 +99,7 @@
         variant="outline"
         size="icon"
         class="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0"
-        :disabled="isSoldOut(product)"
+        :disabled="isSoldOut(product) || isStockPending(product)"
         @click.stop="$emit('quickBuy', product)"
       >
         <ShoppingCart class="h-4 w-4" />
@@ -137,5 +137,5 @@ defineEmits<{
 
 const { t } = useI18n()
 const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
-const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel, isSoldOut, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules, hasWholesalePrices } = useProductLabels()
+const { getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel, isSoldOut, isStockPending, hasPromotionPrice, getPromotionPriceAmount, hasPromotionRules, hasWholesalePrices } = useProductLabels()
 </script>

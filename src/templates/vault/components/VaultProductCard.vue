@@ -22,7 +22,7 @@
     <div class="mx-1 flex flex-wrap items-center gap-1.5">
       <span class="inline-flex items-center gap-1 rounded-full bg-[color:var(--teal-soft)] px-2 py-0.5 text-[11px] font-semibold text-[color:var(--teal-strong)]">
         <component :is="product.fulfillment_type === 'auto' ? Zap : Pencil" class="h-3 w-3" />
-        {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
+        {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
       </span>
       <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="product.purchase_type === 'guest' ? 'bg-[color:var(--gold-soft)] text-[color:var(--gold-strong)]' : 'bg-[color:var(--teal-soft)] text-[color:var(--teal-strong)]'">
         <component :is="product.purchase_type === 'guest' ? UserPlus : Lock" class="h-3 w-3" />
@@ -45,9 +45,9 @@
         </div>
         <span v-if="priceSignal" class="inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="priceSignal.tone">{{ priceSignal.label }}</span>
       </div>
-      <span v-if="soldOut" class="inline-flex flex-none items-center rounded-full border-2 border-hairline-strong px-3.5 py-1.5 text-[13px] font-bold text-foreground" aria-disabled="true">{{ t('products.stockStatus.outOfStock') }}</span>
+      <span v-if="soldOut || stockPending" class="inline-flex flex-none items-center rounded-full border-2 border-hairline-strong px-3.5 py-1.5 text-[13px] font-bold text-foreground" aria-disabled="true">{{ stockPending ? t('products.stockStatus.pendingStock') : t('products.stockStatus.outOfStock') }}</span>
       <button
-        v-else
+      v-else
         type="button"
         class="inline-flex flex-none items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-[13px] font-bold text-white transition hover:bg-primary/90"
         :aria-label="t('products.quickBuyAria')"
@@ -75,7 +75,7 @@ const { t } = useI18n()
 const { getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantityBasis } = useLocalized()
 const {
   getStockStatusLabel, getPurchaseTypeLabel, getFulfillmentTypeLabel,
-  isSoldOut, hasPromotionPrice, getPromotionPriceAmount, hasWholesalePrices, hasPromotionRules,
+  isSoldOut, isStockPending, hasPromotionPrice, getPromotionPriceAmount, hasWholesalePrices, hasPromotionRules,
 } = useProductLabels()
 
 // 封面渐变（对应原 cover-red/teal/plum/gold/ink）
@@ -91,6 +91,7 @@ const coverClass = computed(() => covers[(props.index ?? 0) % covers.length])
 const title = computed(() => getLocalizedText(props.product?.title))
 const categoryName = computed(() => getLocalizedText(props.product?.category?.name))
 const soldOut = computed(() => isSoldOut(props.product))
+const stockPending = computed(() => isStockPending(props.product))
 const promo = computed(() => hasPromotionPrice(props.product))
 
 const imageErrored = ref(false)
@@ -105,6 +106,9 @@ const coverImage = computed(() => {
 const stockPill = computed<{ tone: string; icon: Component; label: string }>(() => {
   if (soldOut.value) {
     return { tone: 'bg-secondary text-muted-foreground', icon: XCircle, label: t('products.stockStatus.outOfStock') }
+  }
+  if (stockPending.value) {
+    return { tone: 'bg-[color:var(--gold-soft)] text-[color:var(--gold-strong)]', icon: AlarmClock, label: t('products.stockStatus.pendingStock') }
   }
   if (props.product?.stock_status === 'low_stock') {
     return { tone: 'bg-[color:var(--gold-soft)] text-[color:var(--gold-strong)]', icon: AlarmClock, label: getStockStatusLabel(props.product) }

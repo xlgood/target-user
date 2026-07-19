@@ -91,7 +91,7 @@
 
                 <div class="mt-1.5 flex flex-wrap items-center gap-1">
                   <Badge :variant="product.fulfillment_type === 'auto' ? 'info' : 'neutral'" size="xs">
-                    {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
+                    {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
                   </Badge>
                   <Badge :variant="getStockBadgeVariant(product.stock_status)" size="xs">
                     {{ getStockStatusLabel(product) }}
@@ -291,7 +291,7 @@
             >
               {{ t('quickBuy.loginToBuy') }}
             </Button>
-            <div v-else-if="isSoldOut(product)" class="flex gap-3">
+            <div v-else-if="isSoldOut(product) || isStockPending(product)" class="flex gap-3">
               <Button
                 variant="secondary"
                 class="flex-1 py-3 h-auto min-h-[44px] rounded-xl text-sm font-semibold"
@@ -368,6 +368,7 @@ const {
   getStockBadgeVariant,
   getStockStatusLabel,
   isSoldOut,
+  isStockPending,
   hasPromotionPrice,
   getPromotionPriceAmount,
   hasSkuPromotionPrice,
@@ -562,6 +563,7 @@ const shouldEnforceSkuStock = (sku: any) => {
 
 const skuAvailableStock = (sku: any) => {
   if (!sku) return 0
+  if (sku?.upstream_stock_unknown === true || sku?.stock_status === 'pending_stock') return 0
   if (!shouldEnforceSkuStock(sku) && !sku?.stock_quantity_hidden) return null
   return resolveSkuAvailableStock(props.product, sku)
 }
@@ -602,6 +604,8 @@ const formatSkuStockDisplay = (display: PublicStockDisplay) => {
       return t('productDetail.skuStockUnlimited')
     case 'out':
       return t('productDetail.skuStockOut')
+    case 'pending':
+      return t('productDetail.skuStockPending')
     case 'remaining':
       return t('productDetail.skuStockRemaining', { count: display.count })
     case 'low_stock':
@@ -622,6 +626,7 @@ const skuStockBadgeClass = (sku: any) => {
   const display = resolveSkuStockDisplay(props.product, sku)
   if (display.kind === 'unlimited' || display.kind === 'hidden') return 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'
   if (display.kind === 'out') return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/30 dark:text-rose-300'
+  if (display.kind === 'pending') return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-300'
   if (display.kind === 'low_stock' || (display.kind === 'range' && display.max <= 5)) return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-300'
   return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300'
 }
@@ -630,6 +635,7 @@ const skuStockDotClass = (sku: any) => {
   const display = resolveSkuStockDisplay(props.product, sku)
   if (display.kind === 'unlimited' || display.kind === 'hidden') return 'bg-slate-400 dark:bg-slate-500'
   if (display.kind === 'out') return 'bg-rose-500 dark:bg-rose-400'
+  if (display.kind === 'pending') return 'bg-amber-500 dark:bg-amber-400'
   if (display.kind === 'low_stock' || (display.kind === 'range' && display.max <= 5)) return 'bg-amber-500 dark:bg-amber-400'
   return 'bg-emerald-500 dark:bg-emerald-400'
 }
@@ -664,6 +670,7 @@ const canPurchase = computed(() => {
   if (!props.product) return false
   if (activeSkus.value.length === 0) return false
   if (props.product.is_sold_out) return false
+  if (isStockPending(props.product)) return false
   if (requiresSKUSelection.value) return false
   if (props.product.stock_status === 'out_of_stock') return false
   if (selectedSku.value && !isSkuPurchasable(selectedSku.value)) return false

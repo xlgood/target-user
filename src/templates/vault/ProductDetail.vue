@@ -49,7 +49,7 @@
             <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12.5px] font-semibold" :class="stockPillTone">{{ getStockStatusLabel(product) }}</span>
             <span class="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--teal-soft)] px-2.5 py-1 text-[12.5px] font-semibold text-[color:var(--teal-strong)]">
               <component :is="product.fulfillment_type === 'auto' ? Zap : Pencil" class="h-3.5 w-3.5" />
-              {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
+              {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
             </span>
             <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12.5px] font-semibold" :class="product.purchase_type === 'guest' ? 'bg-[color:var(--gold-soft)] text-[color:var(--gold-strong)]' : 'bg-[color:var(--teal-soft)] text-[color:var(--teal-strong)]'">
               <component :is="product.purchase_type === 'guest' ? UserPlus : Lock" class="h-3.5 w-3.5" />
@@ -155,6 +155,13 @@
             <p v-if="requiresSKUSelection" class="mt-2 text-[13px] text-warning">{{ t('productDetail.skuRequired') }}</p>
           </div>
 
+          <div v-if="checkoutFields.length" class="my-5 rounded-md bg-primary/10 px-4 py-3">
+            <h3 class="mb-2 text-[13.5px] font-bold text-foreground">{{ t('productDetail.checkoutRequirements') }}</h3>
+            <ul class="grid gap-1 text-[13px] text-muted-foreground">
+              <li v-for="field in checkoutFields" :key="field.key">{{ field.label }}<span v-if="field.required" class="ml-1 text-destructive">*</span></li>
+            </ul>
+          </div>
+
           <!-- 数量 -->
           <div class="my-5">
             <div class="mb-2.5 text-[13px] font-bold uppercase tracking-[0.04em] text-muted-foreground">{{ t('productDetail.quantity') }}</div>
@@ -180,7 +187,7 @@
 
           <div class="mt-4 flex items-center gap-3 rounded-md bg-[color:var(--teal-soft)] px-[18px] py-3.5 text-[color:var(--teal-strong)]">
             <TicketCheck class="h-[22px] w-[22px] flex-none" />
-            <span class="text-sm font-semibold">{{ t('productDetail.deliveryReassurance') }}</span>
+            <span class="text-sm font-semibold">{{ product.upstream_fulfillment ? t('productDetail.upstreamDeliveryReassurance') : t('productDetail.deliveryReassurance') }}</span>
           </div>
         </div>
       </section>
@@ -286,7 +293,7 @@ const {
   hasPromotionRules, getPromotionRules,
   formatPromotionRule, formatWholesaleTier, formatRelatedPostDate, normalizeSkuId,
   loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning,
-  activeSkus, selectedSku,
+  activeSkus, selectedSku, checkoutFields,
   selectedSkuMemberPrice, hasMemberPrice,
   hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,
   selectedSkuWholesaleRules,

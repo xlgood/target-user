@@ -85,7 +85,7 @@
                   <Badge :variant="product.fulfillment_type === 'auto' ? 'info' : 'neutral'">
                     <Zap v-if="product.fulfillment_type === 'auto'" class="h-3 w-3" />
                     <Pencil v-else class="h-3 w-3" />
-                    {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
+                    {{ getFulfillmentTypeLabel(product.fulfillment_type, product.upstream_fulfillment) }}
                   </Badge>
 
                   <Badge :variant="getStockBadgeVariant(product.stock_status)">
@@ -243,6 +243,15 @@
                   <p v-if="requiresSKUSelection" class="mt-2 text-xs text-amber-500">
                     {{ t('productDetail.skuRequired') }}
                   </p>
+                </div>
+
+                <div v-if="checkoutFields.length" class="mb-8 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3">
+                  <h2 class="mb-2 text-sm font-bold text-foreground">{{ t('productDetail.checkoutRequirements') }}</h2>
+                  <ul class="space-y-1 text-sm text-muted-foreground">
+                    <li v-for="field in checkoutFields" :key="field.key">
+                      {{ field.label }}<span v-if="field.required" class="ml-1 text-destructive">*</span>
+                    </li>
+                  </ul>
                 </div>
 
                 <div class="mb-8">
@@ -456,7 +465,7 @@ const {
   hasPromotionRules, getPromotionRules,
   formatPromotionRule, formatWholesaleTier, formatRelatedPostDate, normalizeSkuId,
   loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning,
-  activeSkus, selectedSku,
+  activeSkus, selectedSku, checkoutFields,
   selectedSkuMemberPrice, hasMemberPrice,
   hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,
   selectedSkuWholesaleRules,

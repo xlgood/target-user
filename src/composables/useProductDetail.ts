@@ -61,6 +61,11 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   const loading = ref(true)
   const product = ref<any>(null)
   const relatedPosts = computed<any[]>(() => product.value?.related_posts || [])
+  const checkoutFields = computed<any[]>(() => {
+    const fields = product.value?.manual_form_schema?.fields
+    if (!Array.isArray(fields)) return []
+    return fields.filter((field: any) => String(field?.key || '').trim() && String(field?.label || field?.key || '').trim())
+  })
   const formatRelatedPostDate = (dateString: string) => {
     if (!dateString) return ''
     const date = new Date(dateString)
@@ -226,6 +231,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
 
   const skuAvailableStock = (sku: any) => {
     if (!sku) return 0
+    if (sku?.upstream_stock_unknown === true || sku?.stock_status === 'pending_stock') return 0
     if (!shouldEnforceSkuStock(sku) && !sku?.stock_quantity_hidden) return null
     return resolveSkuAvailableStock(product.value, sku)
   }
@@ -242,6 +248,8 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
         return t('productDetail.skuStockUnlimited')
       case 'out':
         return t('productDetail.skuStockOut')
+      case 'pending':
+        return t('productDetail.skuStockPending')
       case 'remaining':
         return t('productDetail.skuStockRemaining', { count: display.count })
       case 'low_stock':
@@ -267,6 +275,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     const display = resolveSkuStockDisplay(product.value, sku)
     if (display.kind === 'unlimited' || display.kind === 'hidden') return 'border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300'
     if (display.kind === 'out') return 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/30 dark:text-rose-300'
+    if (display.kind === 'pending') return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-300'
     if (display.kind === 'low_stock' || (display.kind === 'range' && display.max <= 5)) return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-300'
     return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300'
   }
@@ -300,7 +309,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   }
 
   const purchaseType = computed(() => product.value?.purchase_type || 'member')
-  const requiresLogin = computed(() => !userAuthStore.isAuthenticated)
+  const requiresLogin = computed(() => !userAuthStore.isAuthenticated && product.value?.stock_status !== 'pending_stock')
   const requiresSKUSelection = computed(() => activeSkus.value.length > 1 && !selectedSku.value)
   const stockBelowMinPurchase = computed(() => {
     const limit = quantityEffectiveLimit.value
@@ -311,6 +320,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     if (!product.value) return false
     if (activeSkus.value.length === 0) return false
     if (product.value.is_sold_out) return false
+    if (product.value.upstream_stock_unknown || product.value.stock_status === 'pending_stock') return false
     if (requiresSKUSelection.value) return false
     if (product.value.stock_status === 'out_of_stock') return false
     if (selectedSku.value && !isSkuPurchasable(selectedSku.value)) return false
@@ -319,6 +329,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const cannotPurchaseReason = computed(() => {
     if (!product.value) return ''
+    if (product.value.upstream_stock_unknown || product.value.stock_status === 'pending_stock') return t('productDetail.stockPending')
     if (requiresLogin.value) return ''
     if (requiresSKUSelection.value) return t('productDetail.skuRequired')
     if (stockBelowMinPurchase.value) return t('productDetail.stockBelowMinPurchase', { count: quantityEffectiveMin.value })
@@ -677,7 +688,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     normalizeSkuId,
     // 状态
     loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning,
-    activeSkus, selectedSku,
+    activeSkus, selectedSku, checkoutFields,
     // 价格计算
     selectedSkuMemberPrice, hasMemberPrice,
     hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,

@@ -44,7 +44,8 @@ export function useProductLabels() {
     return purchaseType === 'guest' ? t('productPurchase.guest') : t('productPurchase.member')
   }
 
-  const getFulfillmentTypeLabel = (fulfillmentType: string) => {
+  const getFulfillmentTypeLabel = (fulfillmentType: string, upstreamFulfillment = false) => {
+    if (upstreamFulfillment) return t('products.fulfillmentType.upstream')
     return fulfillmentType === 'auto' ? t('products.fulfillmentType.auto') : t('products.fulfillmentType.manual')
   }
 
@@ -56,6 +57,8 @@ export function useProductLabels() {
         return 'warning'
       case 'out_of_stock':
         return 'destructive'
+      case 'pending_stock':
+        return 'warning'
       default:
         return 'success'
     }
@@ -65,6 +68,7 @@ export function useProductLabels() {
     const status = product?.stock_status || ''
     if (status === 'unlimited') return t('products.stockStatus.unlimited')
     if (status === 'out_of_stock') return t('products.stockStatus.outOfStock')
+    if (status === 'pending_stock') return t('products.stockStatus.pendingStock')
     if (status === 'low_stock') {
       const quantityHidden = product?.stock_quantity_hidden === true || String(product?.stock_display_mode || '').trim() !== 'exact'
       if (quantityHidden) {
@@ -80,6 +84,7 @@ export function useProductLabels() {
   }
 
   const isSoldOut = (product: any) => Boolean(product?.is_sold_out || product?.stock_status === 'out_of_stock')
+  const isStockPending = (product: any) => Boolean(product?.upstream_stock_unknown || product?.stock_status === 'pending_stock')
 
   const parsePriceAmount = (amount: any) => amountToCents(amount)
 
@@ -206,6 +211,7 @@ export function useProductLabels() {
     getStockBadgeVariant,
     getStockStatusLabel,
     isSoldOut,
+    isStockPending,
     hasPromotionPrice,
     getPromotionPriceAmount,
     getPromotionSaveAmount,

@@ -4,6 +4,7 @@ const STOCK_STATUS_UNLIMITED = 'unlimited'
 const STOCK_STATUS_IN_STOCK = 'in_stock'
 const STOCK_STATUS_LOW_STOCK = 'low_stock'
 const STOCK_STATUS_OUT_OF_STOCK = 'out_of_stock'
+const STOCK_STATUS_PENDING = 'pending_stock'
 
 export type PublicStockDisplay =
   | { kind: 'unlimited' }
@@ -14,6 +15,7 @@ export type PublicStockDisplay =
   | { kind: 'hidden' }
   | { kind: 'range'; min: number; max: number }
   | { kind: 'range_plus'; min: number }
+  | { kind: 'pending' }
 
 const normalizeStockNumber = (value: unknown) => {
   const numberValue = Number(value)
@@ -35,7 +37,8 @@ const normalizeStockStatus = (value: unknown, fallbackQuantity: number | null) =
     status === STOCK_STATUS_UNLIMITED ||
     status === STOCK_STATUS_IN_STOCK ||
     status === STOCK_STATUS_LOW_STOCK ||
-    status === STOCK_STATUS_OUT_OF_STOCK
+    status === STOCK_STATUS_OUT_OF_STOCK ||
+    status === STOCK_STATUS_PENDING
   ) {
     return status
   }
@@ -53,6 +56,7 @@ const isQuantityHidden = (product: any, sku: any) => {
 
 export const resolveSkuAvailableStock = (product: any, sku: any): number | null => {
   if (!sku) return 0
+  if (sku?.upstream_stock_unknown === true || sku?.stock_status === STOCK_STATUS_PENDING) return 0
   if (isQuantityHidden(product, sku)) {
     const status = normalizeStockStatus(sku?.stock_status, null)
     if (status === STOCK_STATUS_OUT_OF_STOCK) return 0
@@ -78,6 +82,7 @@ export const resolveSkuStockDisplay = (product: any, sku: any): PublicStockDispl
   const hidden = isQuantityHidden(product, sku)
   const status = normalizeStockStatus(sku?.stock_status, available)
 
+  if (status === STOCK_STATUS_PENDING) return { kind: 'pending' }
   if (status === STOCK_STATUS_UNLIMITED) return { kind: 'unlimited' }
   if (status === STOCK_STATUS_OUT_OF_STOCK) return { kind: 'out' }
 
