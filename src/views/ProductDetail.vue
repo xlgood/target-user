@@ -457,10 +457,10 @@ const setupMobileBarObserver = () => {
 
 // 全部业务逻辑由 useProductDetail 提供（与 vault 模板共用，保证功能一致）
 const {
-  getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantity,
+  getLocalizedText, siteCurrency, formatPriceForQuantity,
   getPurchaseTypeLabel, getFulfillmentTypeLabel, getStockBadgeVariant, getStockStatusLabel,
-  hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
-  hasSkuPromotionPrice, getSkuPromotionSaveAmount,
+  hasPromotionPrice, getPromotionPriceAmount,
+  hasSkuPromotionPrice,
   hasPromotionRules, getPromotionRules,
   formatPromotionRule, formatWholesaleTier, formatRelatedPostDate, normalizeSkuId,
   loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning,

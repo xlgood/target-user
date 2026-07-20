@@ -286,10 +286,10 @@ const setupMobileBarObserver = () => {
 }
 
 const {
-  getLocalizedText, siteCurrency, formatPrice, formatPriceForQuantity,
+  getLocalizedText, siteCurrency, formatPriceForQuantity,
   getFulfillmentTypeLabel, getPurchaseTypeLabel, getStockStatusLabel, getStockBadgeVariant,
-  hasPromotionPrice, getPromotionPriceAmount, getPromotionSaveAmount,
-  hasSkuPromotionPrice, getSkuPromotionSaveAmount,
+  hasPromotionPrice, getPromotionPriceAmount,
+  hasSkuPromotionPrice,
   hasPromotionRules, getPromotionRules,
   formatPromotionRule, formatWholesaleTier, formatRelatedPostDate, normalizeSkuId,
   loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning,
