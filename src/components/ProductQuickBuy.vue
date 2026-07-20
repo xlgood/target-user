@@ -709,6 +709,10 @@ const close = () => {
 }
 
 const handleAddToCart = () => {
+  if (Array.isArray(props.product?.manual_form_schema?.fields) && props.product.manual_form_schema.fields.length > 0) {
+    goToDetail()
+    return
+  }
   if (!props.product || !canPurchase.value) return
   purchaseWarning.value = ''
 
@@ -771,9 +775,14 @@ const handleAddToCart = () => {
   }, quantity.value)
   toast.success(t('toast.addedToCart'))
   close()
+  router.push('/cart')
 }
 
 const handleBuyNow = () => {
+  if (Array.isArray(props.product?.manual_form_schema?.fields) && props.product.manual_form_schema.fields.length > 0) {
+    goToDetail()
+    return
+  }
   purchaseWarning.value = ''
   if (!canPurchase.value) return
   if (!props.product) return

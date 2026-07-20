@@ -30,6 +30,7 @@ export interface CartItem {
     purchaseType?: string
     fulfillmentType?: string
     manualFormSchema?: any
+    manualFormData?: Record<string, any>
     commentsQuantityFromForm?: boolean
     paymentChannelIds?: number[]
 }
@@ -78,6 +79,11 @@ const normalizePriceQuantityBasis = (value: unknown): number => {
     return Math.max(1, Math.floor(numberValue))
 }
 
+const normalizeManualFormData = (value: unknown): Record<string, any> => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+    return { ...(value as Record<string, any>) }
+}
+
 // 兜底将数量收敛到 [min, max] 区间，确保 store 内数据始终合法。
 // UI 层（ProductDetail / Cart 等）应在调用前根据 min/max 给用户提示，避免出现"数量被静默抬升"的体验。
 const clampCartQuantity = (quantity: number, maxPurchaseQuantity?: number, minPurchaseQuantity?: number) => {
@@ -120,6 +126,7 @@ const loadCartItems = (): CartItem[] => {
                     minPurchaseQuantity: normalizeOptionalLimitNumber(row.minPurchaseQuantity ?? row.min_purchase_quantity),
                     maxPurchaseQuantity: normalizeOptionalLimitNumber(row.maxPurchaseQuantity ?? row.max_purchase_quantity),
                     priceQuantityBasis: normalizePriceQuantityBasis(row.priceQuantityBasis ?? row.price_quantity_basis),
+                    manualFormData: normalizeManualFormData(row.manualFormData ?? row.manual_form_data),
                     commentsQuantityFromForm: Boolean(row.commentsQuantityFromForm ?? row.comments_quantity_from_form),
                 } as CartItem
             })
@@ -159,6 +166,7 @@ export const useCartStore = defineStore('cart', () => {
             minPurchaseQuantity: normalizeOptionalLimitNumber(item.minPurchaseQuantity),
             maxPurchaseQuantity: normalizeOptionalLimitNumber(item.maxPurchaseQuantity),
             priceQuantityBasis: normalizePriceQuantityBasis(item.priceQuantityBasis),
+            manualFormData: normalizeManualFormData(item.manualFormData),
             commentsQuantityFromForm: Boolean(item.commentsQuantityFromForm),
         }
         const qty = clampCartQuantity(quantity, normalizedItem.maxPurchaseQuantity, normalizedItem.minPurchaseQuantity)
@@ -177,6 +185,7 @@ export const useCartStore = defineStore('cart', () => {
             existing.purchaseType = normalizedItem.purchaseType
             existing.fulfillmentType = normalizedItem.fulfillmentType
             existing.manualFormSchema = normalizedItem.manualFormSchema
+            existing.manualFormData = normalizedItem.manualFormData
             existing.commentsQuantityFromForm = normalizedItem.commentsQuantityFromForm
             existing.skuId = normalizedItem.skuId
             existing.skuCode = normalizedItem.skuCode
@@ -233,6 +242,7 @@ export const useCartStore = defineStore('cart', () => {
         target.minPurchaseQuantity = normalizeOptionalLimitNumber(target.minPurchaseQuantity)
         target.maxPurchaseQuantity = normalizeOptionalLimitNumber(target.maxPurchaseQuantity)
         target.priceQuantityBasis = normalizePriceQuantityBasis(target.priceQuantityBasis)
+        target.manualFormData = normalizeManualFormData(target.manualFormData)
         target.commentsQuantityFromForm = Boolean(target.commentsQuantityFromForm)
         persist()
     }

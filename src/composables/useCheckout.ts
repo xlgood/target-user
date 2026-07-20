@@ -13,6 +13,7 @@ import { buildSkuDisplayText, normalizeSkuId } from '../utils/sku'
 import { refreshCartStockSnapshots, cartItemPurchaseLimit as itemPurchaseLimit, cartItemPurchaseMin as itemPurchaseMin } from '../utils/cartStock'
 import { getImageUrl } from '../utils/image'
 import { getAffiliateCode, getAffiliateVisitorKey } from '../utils/affiliate'
+import { countNonEmptyLines } from '../utils/commentQuantity'
 import ImageCaptcha from '../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../components/captcha/TurnstileCaptcha.vue'
 import { useLocalized, useProductLabels } from './useProduct'
@@ -400,7 +401,8 @@ export function useCheckout() {
       const current = manualFormData.value[key] || {}
       const formValues: Record<string, any> = {}
       product.fields.forEach((field) => {
-        const currentValue = current[field.key]
+        const savedValue = product.commentQuantityItems.find((item) => item.manualFormData && Object.prototype.hasOwnProperty.call(item.manualFormData, field.key))?.manualFormData?.[field.key]
+        const currentValue = current[field.key] ?? savedValue
         if (field.type === 'checkbox') {
           formValues[field.key] = Array.isArray(currentValue)
             ? currentValue.map((item: any) => String(item)).filter(Boolean)
@@ -515,15 +517,10 @@ export function useCheckout() {
     return manualFormValidation.value.errors[manualFieldErrorKey(itemKey, fieldKey)] || ''
   }
 
-  const nonEmptyCommentLineCount = (value: unknown) => String(value ?? '')
-    .split(/\r?\n/)
-    .filter((line) => line.trim().length > 0)
-    .length
-
   const syncCommentQuantities = () => {
     manualFormProducts.value.forEach((product) => {
       if (product.commentQuantityItems.length === 0) return
-      const count = nonEmptyCommentLineCount(manualFormData.value[product.itemKey]?.comments)
+      const count = countNonEmptyLines(manualFormData.value[product.itemKey]?.comments)
       if (count <= 0) return
       product.commentQuantityItems.forEach((item) => {
         if (isBuyNowMode.value) {

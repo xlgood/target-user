@@ -143,6 +143,9 @@ export const refreshCartStockSnapshots = async (cartStore: CartStoreLike) => {
       skuStockSnapshotAt: new Date().toISOString(),
       minPurchaseQuantity: normalizeOptionalLimitNumber(product?.min_purchase_quantity),
       maxPurchaseQuantity: normalizeOptionalLimitNumber(product?.max_purchase_quantity),
+      manualFormSchema: product?.manual_form_schema || item.manualFormSchema,
+      commentsQuantityFromForm: Array.isArray(product?.manual_form_schema?.fields)
+        && product.manual_form_schema.fields.some((field: any) => String(field?.key || '').trim() === 'comments'),
     })
   }
 }

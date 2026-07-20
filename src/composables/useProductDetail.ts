@@ -12,6 +12,7 @@ import { useUserProfileStore } from '../stores/userProfile'
 import { debounceAsync } from '../utils/debounce'
 import { buildSkuDisplayText, normalizeSkuId } from '../utils/sku'
 import { resolveSkuAvailableStock, resolveSkuStockDisplay, type PublicStockDisplay } from '../utils/publicStock'
+import { countNonEmptyLines } from '../utils/commentQuantity'
 import { useLocalized, useProductLabels } from './useProduct'
 import { toast } from './useToast'
 
@@ -60,12 +61,19 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
 
   const loading = ref(true)
   const product = ref<any>(null)
+  const purchaseFormData = ref<Record<string, any>>({})
   const relatedPosts = computed<any[]>(() => product.value?.related_posts || [])
   const checkoutFields = computed<any[]>(() => {
     const fields = product.value?.manual_form_schema?.fields
     if (!Array.isArray(fields)) return []
     return fields.filter((field: any) => String(field?.key || '').trim() && String(field?.label || field?.key || '').trim())
   })
+  const hasMissingRequiredPurchaseField = computed(() => checkoutFields.value.some((field: any) => {
+    if (!field?.required) return false
+    const value = purchaseFormData.value[String(field.key || '').trim()]
+    if (field.type === 'checkbox') return !Array.isArray(value) || value.length === 0
+    return !String(value ?? '').trim()
+  }))
   const formatRelatedPostDate = (dateString: string) => {
     if (!dateString) return ''
     const date = new Date(dateString)
@@ -85,6 +93,12 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     if (selectedSkuId.value <= 0) return null
     return activeSkus.value.find((sku: any) => normalizeSkuId(sku?.id) === selectedSkuId.value) || null
   })
+
+  const usesCommentQuantity = computed(() => Array.isArray(product.value?.manual_form_schema?.fields)
+    && product.value.manual_form_schema.fields.some((field: any) => String(field?.key || '').trim() === 'comments'))
+
+  const commentQuantity = computed(() => countNonEmptyLines(purchaseFormData.value.comments))
+  const purchaseQuantity = computed(() => usesCommentQuantity.value ? commentQuantity.value : quantity.value)
 
   // 会员价相关
   const userMemberLevelId = computed(() => Number(userAuthStore.user?.member_level_id || 0))
@@ -132,10 +146,10 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     return resolveWholesalePriceAmount(
       product.value,
       selectedSku.value.price_amount,
-      quantity.value,
+      purchaseQuantity.value,
       normalizeSkuId(selectedSku.value.id),
       selectedSku.value.sku_code,
-      quantity.value,
+      purchaseQuantity.value,
     )
   })
 
@@ -324,6 +338,8 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     if (product.value.stock_status === 'out_of_stock') return false
     if (selectedSku.value && !isSkuPurchasable(selectedSku.value)) return false
     if (stockBelowMinPurchase.value) return false
+    if (usesCommentQuantity.value && commentQuantity.value < quantityEffectiveMin.value) return false
+    if (hasMissingRequiredPurchaseField.value) return false
     return true
   })
   const cannotPurchaseReason = computed(() => {
@@ -332,6 +348,10 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     if (requiresLogin.value) return ''
     if (requiresSKUSelection.value) return t('productDetail.skuRequired')
     if (stockBelowMinPurchase.value) return t('productDetail.stockBelowMinPurchase', { count: quantityEffectiveMin.value })
+    if (usesCommentQuantity.value && commentQuantity.value < quantityEffectiveMin.value) {
+      return t('productDetail.commentQuantityBelowMinimum', { count: quantityEffectiveMin.value })
+    }
+    if (hasMissingRequiredPurchaseField.value) return t('productDetail.requiredInformationMissing')
     if (canPurchase.value) return ''
     return t('productDetail.stockUnavailable')
   })
@@ -417,10 +437,11 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     purchaseType: product.value.purchase_type,
     fulfillmentType: product.value.fulfillment_type === 'upstream' ? 'manual' : product.value.fulfillment_type,
     manualFormSchema: product.value.manual_form_schema || {},
+    manualFormData: { ...purchaseFormData.value },
     commentsQuantityFromForm: Array.isArray(product.value?.manual_form_schema?.fields)
       && product.value.manual_form_schema.fields.some((field: any) => String(field?.key || '').trim() === 'comments'),
     paymentChannelIds: Array.isArray(product.value.payment_channel_ids) && product.value.payment_channel_ids.length > 0 ? product.value.payment_channel_ids : undefined,
-    quantity: quantity.value,
+    quantity: purchaseQuantity.value,
   })
 
   const addToCart = () => {
@@ -434,7 +455,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     const sku = selectedSku.value
     const available = skuAvailableStock(sku)
     const cartQty = selectedCartQuantity()
-    const nextQuantity = cartQty + quantity.value
+    const nextQuantity = cartQty + purchaseQuantity.value
     const productLimit = normalizeOptionalLimitNumber(product.value?.max_purchase_quantity)
     let effectiveLimit: number | null = productLimit
     if (available !== null) {
@@ -454,8 +475,9 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
         : t('productDetail.addCartLimitExceeded', { count: effectiveLimit })
       return
     }
-    cartStore.addItem(buildItemPayload(sku), quantity.value)
+    cartStore.addItem(buildItemPayload(sku), purchaseQuantity.value)
     toast.success(t('toast.addedToCart'))
+    router.push('/cart')
   }
 
   const buyNow = () => {
@@ -474,7 +496,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     if (available !== null) {
       limit = limit === null ? available : Math.min(limit, available)
     }
-    if (limit !== null && quantity.value > limit) {
+    if (limit !== null && purchaseQuantity.value > limit) {
       purchaseWarning.value = available !== null && limit === available
         ? (available > 0 ? t('productDetail.addCartStockExceeded', { count: available }) : t('productDetail.stockUnavailable'))
         : t('productDetail.addCartLimitExceeded', { count: limit })
@@ -494,13 +516,13 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const mobileBarMemberPriceDisplay = computed(() => {
     if (hasSelectedSkuWholesalePrice.value && selectedSkuWholesaleFinalIsMember.value) {
-      return formatPriceForQuantity(selectedSkuWholesaleFinalPrice.value, quantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
+      return formatPriceForQuantity(selectedSkuWholesaleFinalPrice.value, purchaseQuantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
     }
     if (selectedSku.value && hasSkuPromotionPrice(selectedSku.value) && selectedSkuPromotionFinalIsMember.value) {
-      return formatPriceForQuantity(selectedSkuPromotionFinalPrice.value, quantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
+      return formatPriceForQuantity(selectedSkuPromotionFinalPrice.value, purchaseQuantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
     }
     if (!selectedSkuMemberPrice.value) return ''
-    return formatPriceForQuantity(selectedSkuMemberPrice.value, quantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
+    return formatPriceForQuantity(selectedSkuMemberPrice.value, purchaseQuantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
   })
   const mobileBarShowSkuPromotionPrice = computed(() => {
     if (mobileBarShowMemberPrice.value) return false
@@ -509,7 +531,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const mobileBarSkuPromotionPriceDisplay = computed(() => {
     if (!selectedSku.value) return ''
-    return formatPriceForQuantity(getSkuPromotionPriceAmount(selectedSku.value), quantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
+    return formatPriceForQuantity(getSkuPromotionPriceAmount(selectedSku.value), purchaseQuantity.value, selectedSku.value?.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
   })
   const mobileBarShowSkuPrice = computed(() => {
     if (mobileBarShowMemberPrice.value || mobileBarShowSkuPromotionPrice.value) return false
@@ -517,7 +539,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const mobileBarSkuPriceDisplay = computed(() => {
     if (!selectedSku.value) return ''
-    return formatPriceForQuantity(selectedSku.value.price_amount, quantity.value, selectedSku.value.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
+    return formatPriceForQuantity(selectedSku.value.price_amount, purchaseQuantity.value, selectedSku.value.price_quantity_basis ?? product.value?.price_quantity_basis, siteCurrency.value)
   })
   const mobileBarShowProductPromotionPrice = computed(() => {
     if (selectedSku.value) return false
@@ -525,11 +547,11 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
   })
   const mobileBarProductPromotionPriceDisplay = computed(() => {
     if (!product.value) return ''
-    return formatPriceForQuantity(getPromotionPriceAmount(product.value), quantity.value, product.value.price_quantity_basis, siteCurrency.value)
+    return formatPriceForQuantity(getPromotionPriceAmount(product.value), purchaseQuantity.value, product.value.price_quantity_basis, siteCurrency.value)
   })
   const mobileBarProductPriceDisplay = computed(() => {
     if (!product.value) return ''
-    return formatPriceForQuantity(product.value.price_amount, quantity.value, product.value.price_quantity_basis, siteCurrency.value)
+    return formatPriceForQuantity(product.value.price_amount, purchaseQuantity.value, product.value.price_quantity_basis, siteCurrency.value)
   })
 
   const goLogin = () => {
@@ -542,6 +564,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
       const slug = route.params.slug as string
       const response = await productAPI.detail(slug)
       product.value = response.data.data || null
+      purchaseFormData.value = {}
       if (images.value.length > 0) {
         currentImage.value = images.value[0] || ''
       }
@@ -673,6 +696,12 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     }
   })
 
+  watch(commentQuantity, (count) => {
+    if (usesCommentQuantity.value && count > 0) {
+      quantity.value = count
+    }
+  })
+
   onUnmounted(() => {
     debouncedLoadProduct.cancel()
   })
@@ -687,8 +716,8 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     formatPromotionRule, formatWholesaleTier, formatRelatedPostDate,
     normalizeSkuId,
     // 状态
-    loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning,
-    activeSkus, selectedSku, checkoutFields,
+    loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning, purchaseFormData,
+    activeSkus, selectedSku, checkoutFields, hasMissingRequiredPurchaseField,
     // 价格计算
     selectedSkuMemberPrice, hasMemberPrice,
     hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,
@@ -697,7 +726,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     showSelectedSkuMemberBadge,
     // SKU / 库存 / 数量
     isSkuPurchasable, skuDisplayText, skuStockText, skuStockBadgeClass,
-    quantityEffectiveLimit, quantityEffectiveMin, handleQuantityInput,
+    quantityEffectiveLimit, quantityEffectiveMin, handleQuantityInput, usesCommentQuantity, commentQuantity, purchaseQuantity,
     // 购买能力
     purchaseType, requiresLogin, requiresSKUSelection, canPurchase, cannotPurchaseReason,
     categoryName, images,

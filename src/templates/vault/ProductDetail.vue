@@ -155,15 +155,12 @@
             <p v-if="requiresSKUSelection" class="mt-2 text-[13px] text-warning">{{ t('productDetail.skuRequired') }}</p>
           </div>
 
-          <div v-if="checkoutFields.length" class="my-5 rounded-md bg-primary/10 px-4 py-3">
-            <h3 class="mb-2 text-[13.5px] font-bold text-foreground">{{ t('productDetail.checkoutRequirements') }}</h3>
-            <ul class="grid gap-1 text-[13px] text-muted-foreground">
-              <li v-for="field in checkoutFields" :key="field.key">{{ field.label }}<span v-if="field.required" class="ml-1 text-destructive">*</span></li>
-            </ul>
+          <div v-if="checkoutFields.length" class="my-5">
+            <ProductPurchaseForm v-model="purchaseFormData" :fields="checkoutFields" :comment-quantity="commentQuantity" />
           </div>
 
           <!-- 数量 -->
-          <div class="my-5">
+          <div v-if="!usesCommentQuantity" class="my-5">
             <div class="mb-2.5 text-[13px] font-bold uppercase tracking-[0.04em] text-muted-foreground">{{ t('productDetail.quantity') }}</div>
             <div class="inline-flex items-center overflow-hidden rounded-full border-2 border-hairline-strong">
               <button type="button" class="grid h-11 w-[42px] place-items-center bg-card text-foreground disabled:opacity-35" :aria-label="t('productDetail.quantity')" :disabled="quantity <= quantityEffectiveMin" @click="quantity = Math.max(quantityEffectiveMin, quantity - 1)"><Minus class="h-[17px] w-[17px]" /></button>
@@ -263,6 +260,7 @@ import { Button } from '@/components/ui/button'
 import { isProviderCatalogImage } from '../../utils/image'
 import { processHtmlForDisplay } from '../../utils/content'
 import { useProductDetail } from '../../composables/useProductDetail'
+import ProductPurchaseForm from '../../components/product/ProductPurchaseForm.vue'
 import VaultProductMobileBar from './components/VaultProductMobileBar.vue'
 
 const { t } = useI18n()
@@ -292,7 +290,7 @@ const {
   hasSkuPromotionPrice,
   hasPromotionRules, getPromotionRules,
   formatPromotionRule, formatWholesaleTier, formatRelatedPostDate, normalizeSkuId,
-  loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning,
+  loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning, purchaseFormData,
   activeSkus, selectedSku, checkoutFields,
   selectedSkuMemberPrice, hasMemberPrice,
   hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,
@@ -300,7 +298,7 @@ const {
   selectedSkuPromotionPrice, selectedSkuPromotionFinalIsMember, selectedSkuPromotionFinalPrice,
   showSelectedSkuMemberBadge,
   isSkuPurchasable, skuDisplayText, skuStockText,
-  quantityEffectiveLimit, quantityEffectiveMin, handleQuantityInput,
+  quantityEffectiveLimit, quantityEffectiveMin, handleQuantityInput, usesCommentQuantity, commentQuantity,
   requiresLogin, requiresSKUSelection, canPurchase, cannotPurchaseReason,
   categoryName, images,
   addToCart, buyNow, goLogin, loadProduct,

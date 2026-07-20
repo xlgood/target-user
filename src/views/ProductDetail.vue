@@ -245,15 +245,10 @@
                 </div>
 
                 <div v-if="checkoutFields.length" class="mb-8 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3">
-                  <h2 class="mb-2 text-sm font-bold text-foreground">{{ t('productDetail.checkoutRequirements') }}</h2>
-                  <ul class="space-y-1 text-sm text-muted-foreground">
-                    <li v-for="field in checkoutFields" :key="field.key">
-                      {{ field.label }}<span v-if="field.required" class="ml-1 text-destructive">*</span>
-                    </li>
-                  </ul>
+                  <ProductPurchaseForm v-model="purchaseFormData" :fields="checkoutFields" :comment-quantity="commentQuantity" />
                 </div>
 
-                <div class="mb-8">
+                <div v-if="!usesCommentQuantity" class="mb-8">
                   <h2 class="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">
                     {{ t('productDetail.description') }}
                   </h2>
@@ -427,6 +422,7 @@ import { processHtmlForDisplay } from '../utils/content'
 import { useProductDetail } from '../composables/useProductDetail'
 import ProductImageGallery from '../components/product/ProductImageGallery.vue'
 import ProductMobileBar from '../components/product/ProductMobileBar.vue'
+import ProductPurchaseForm from '../components/product/ProductPurchaseForm.vue'
 import BreadcrumbNav from '../components/BreadcrumbNav.vue'
 import EmptyState from '../components/EmptyState.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -463,7 +459,7 @@ const {
   hasSkuPromotionPrice,
   hasPromotionRules, getPromotionRules,
   formatPromotionRule, formatWholesaleTier, formatRelatedPostDate, normalizeSkuId,
-  loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning,
+  loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning, purchaseFormData,
   activeSkus, selectedSku, checkoutFields,
   selectedSkuMemberPrice, hasMemberPrice,
   hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,
@@ -471,7 +467,7 @@ const {
   selectedSkuPromotionPrice, selectedSkuPromotionFinalIsMember, selectedSkuPromotionFinalPrice,
   showSelectedSkuMemberBadge,
   isSkuPurchasable, skuDisplayText, skuStockText, skuStockBadgeClass,
-  quantityEffectiveLimit, quantityEffectiveMin, handleQuantityInput,
+  quantityEffectiveLimit, quantityEffectiveMin, handleQuantityInput, usesCommentQuantity, commentQuantity,
   requiresLogin, requiresSKUSelection, canPurchase, cannotPurchaseReason,
   categoryName, images,
   addToCart, buyNow, goLogin, loadProduct,
