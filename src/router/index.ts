@@ -18,6 +18,7 @@ const checkoutViewLoader: RouteComponentLoader = () => import('../views/Checkout
 const paymentViewLoader: RouteComponentLoader = () => import('../views/Payment.vue')
 const blogViewLoader: RouteComponentLoader = () => import('../views/Blog.vue')
 const noticeViewLoader: RouteComponentLoader = () => import('../views/Notice.vue')
+const accountAccessGuideViewLoader: RouteComponentLoader = () => import('../views/AccountAccessGuide.vue')
 const loginViewLoader: RouteComponentLoader = () => import('../views/auth/Login.vue')
 const resellerLayoutLoader: RouteComponentLoader = () => import('../views/reseller/ResellerConsoleLayout.vue')
 
@@ -120,6 +121,7 @@ const publicLocaleRouteNames = new Set([
     'about',
     'terms',
     'privacy',
+    'account-access-guide',
 ])
 
 const withLocaleRoutes = (routes: AppRoute[]): AppRoute[] => {
@@ -309,6 +311,11 @@ const baseRoutes: AppRoute[] = [
         path: '/notice',
         name: 'notice',
         component: templateView('Notice', noticeViewLoader),
+    },
+    {
+        path: '/guides/account-access',
+        name: 'account-access-guide',
+        component: templateView('AccountAccessGuide', accountAccessGuideViewLoader),
     },
     {
         path: '/about',

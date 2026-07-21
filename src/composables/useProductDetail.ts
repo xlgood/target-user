@@ -68,6 +68,10 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     if (!Array.isArray(fields)) return []
     return fields.filter((field: any) => String(field?.key || '').trim() && String(field?.label || field?.key || '').trim())
   })
+  const showAccountAccessGuide = computed(() => {
+    const slug = String(product.value?.category?.slug || '').trim().toLowerCase()
+    return ['platform-outlook', 'platform-hotmail', 'platform-overseas-email'].includes(slug)
+  })
   const hasMissingRequiredPurchaseField = computed(() => checkoutFields.value.some((field: any) => {
     if (!field?.required) return false
     const value = purchaseFormData.value[String(field.key || '').trim()]
@@ -717,7 +721,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     normalizeSkuId,
     // 状态
     loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning, purchaseFormData,
-    activeSkus, selectedSku, checkoutFields, hasMissingRequiredPurchaseField,
+    activeSkus, selectedSku, checkoutFields, showAccountAccessGuide, hasMissingRequiredPurchaseField,
     // 价格计算
     selectedSkuMemberPrice, hasMemberPrice,
     hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,

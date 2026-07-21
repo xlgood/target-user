@@ -159,6 +159,10 @@
             <ProductPurchaseForm v-model="purchaseFormData" :fields="checkoutFields" :comment-quantity="commentQuantity" />
           </div>
 
+          <RouterLink v-if="showAccountAccessGuide" to="/guides/account-access" class="my-5 flex rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/10">
+            {{ t('accountAccessGuide.productLink') }}
+          </RouterLink>
+
           <!-- 数量 -->
           <div v-if="!usesCommentQuantity" class="my-5">
             <div class="mb-2.5 text-[13px] font-bold uppercase tracking-[0.04em] text-muted-foreground">{{ t('productDetail.quantity') }}</div>
@@ -291,7 +295,7 @@ const {
   hasPromotionRules, getPromotionRules,
   formatPromotionRule, formatWholesaleTier, formatRelatedPostDate, normalizeSkuId,
   loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning, purchaseFormData,
-  activeSkus, selectedSku, checkoutFields,
+  activeSkus, selectedSku, checkoutFields, showAccountAccessGuide,
   selectedSkuMemberPrice, hasMemberPrice,
   hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,
   selectedSkuWholesaleRules,

@@ -35,6 +35,9 @@
           :placeholder="fieldPlaceholder(field)"
           @input="setField(field.key, ($event.target as HTMLInputElement).value)"
         />
+        <span v-if="fieldHelp(field)" class="text-xs font-normal leading-5 text-muted-foreground">
+          {{ fieldHelp(field) }}
+        </span>
       </label>
     </div>
   </section>
@@ -62,6 +65,7 @@ const hasComments = computed(() => props.fields.some((field) => String(field?.ke
 
 const fieldLabel = (field: any) => getLocalizedText(field?.label) || String(field?.label || field?.key || '')
 const fieldPlaceholder = (field: any) => getLocalizedText(field?.placeholder) || String(field?.placeholder || '')
+const fieldHelp = (field: any) => getLocalizedText(field?.help) || String(field?.help || '')
 const fieldValue = (key: string) => props.modelValue?.[key] ?? ''
 const inputType = (type: string) => ({ number: 'number', email: 'email', phone: 'tel', url: 'url' }[type] || 'text')
 
