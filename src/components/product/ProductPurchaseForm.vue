@@ -31,6 +31,29 @@
           <option value="">{{ t('checkout.manualFormSelectPlaceholder') }}</option>
           <option v-for="option in field.options || []" :key="option" :value="option">{{ option }}</option>
         </select>
+        <div v-else-if="field.type === 'radio'" class="grid gap-2 rounded-md border bg-background p-3">
+          <label v-for="option in field.options || []" :key="option" class="flex items-center gap-2 font-normal">
+            <input
+              :checked="fieldValue(field.key) === option"
+              :name="`purchase-radio-${field.key}`"
+              type="radio"
+              :value="option"
+              @change="setField(field.key, option)"
+            />
+            <span>{{ option }}</span>
+          </label>
+        </div>
+        <div v-else-if="field.type === 'checkbox'" class="grid gap-2 rounded-md border bg-background p-3">
+          <label v-for="option in field.options || []" :key="option" class="flex items-center gap-2 font-normal">
+            <input
+              :checked="isCheckboxChecked(field.key, option)"
+              type="checkbox"
+              :value="option"
+              @change="toggleCheckboxValue(field.key, option, ($event.target as HTMLInputElement).checked)"
+            />
+            <span>{{ option }}</span>
+          </label>
+        </div>
         <input
           v-else
           :type="inputType(field.type)"
@@ -80,5 +103,18 @@ const inputType = (type: string) => ({ number: 'number', email: 'email', phone: 
 
 const setField = (key: string, value: string) => {
   emit('update:modelValue', { ...props.modelValue, [key]: value })
+}
+
+const isCheckboxChecked = (key: string, option: string) => {
+  const value = fieldValue(key)
+  return Array.isArray(value) && value.includes(option)
+}
+
+const toggleCheckboxValue = (key: string, option: string, checked: boolean) => {
+  const current = fieldValue(key)
+  const values = Array.isArray(current) ? [...current] : []
+  if (checked && !values.includes(option)) values.push(option)
+  if (!checked) values.splice(values.indexOf(option), 1)
+  emit('update:modelValue', { ...props.modelValue, [key]: values })
 }
 </script>

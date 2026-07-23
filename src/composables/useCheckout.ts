@@ -14,22 +14,10 @@ import { refreshCartStockSnapshots, cartItemPurchaseLimit as itemPurchaseLimit, 
 import { getImageUrl } from '../utils/image'
 import { getAffiliateCode, getAffiliateVisitorKey } from '../utils/affiliate'
 import { countNonEmptyLines } from '../utils/commentQuantity'
+import { buildManualFormDataPayload, normalizeManualFormSchema, type ManualFormField } from '../utils/manualForm'
 import ImageCaptcha from '../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../components/captcha/TurnstileCaptcha.vue'
 import { useLocalized, useProductLabels } from './useProduct'
-
-interface ManualFormField {
-  key: string
-  type: string
-  required: boolean
-  label?: Record<string, string>
-  placeholder?: Record<string, string>
-  regex?: string
-  min?: number
-  max?: number
-  max_len?: number
-  options: string[]
-}
 
 interface ManualFormProduct {
   itemKey: string
@@ -280,7 +268,6 @@ export function useCheckout() {
   const guestImageCaptchaRef = ref<InstanceType<typeof ImageCaptcha> | null>(null)
   const guestTurnstileRef = ref<InstanceType<typeof TurnstileCaptcha> | null>(null)
 
-  const manualFieldTypes = new Set(['text', 'textarea', 'phone', 'email', 'number', 'select', 'radio', 'checkbox'])
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   const phonePattern = /^\+?[0-9\-()\s]{6,20}$/
   const findLastUnescapedSlash = (value: string) => {
@@ -329,37 +316,6 @@ export function useCheckout() {
 
   const manualFormData = ref<Record<string, Record<string, any>>>({})
   const submitAttempted = ref(false)
-
-  const normalizeManualFormSchema = (rawSchema: any): ManualFormField[] => {
-    const rawFields = Array.isArray(rawSchema?.fields) ? rawSchema.fields : []
-    return rawFields
-      .map((rawField: any) => {
-        const key = String(rawField?.key || '').trim()
-        const type = String(rawField?.type || '').trim()
-        if (!key || !manualFieldTypes.has(type)) {
-          return null
-        }
-        const options = Array.isArray(rawField?.options)
-          ? rawField.options.map((item: any) => String(item || '').trim()).filter(Boolean)
-          : []
-        const minValue = Number(rawField?.min)
-        const maxValue = Number(rawField?.max)
-        const maxLenValue = Number(rawField?.max_len)
-        return {
-          key,
-          type,
-          required: Boolean(rawField?.required),
-          label: rawField?.label || undefined,
-          placeholder: rawField?.placeholder || undefined,
-          regex: String(rawField?.regex || '').trim() || undefined,
-          min: Number.isFinite(minValue) ? minValue : undefined,
-          max: Number.isFinite(maxValue) ? maxValue : undefined,
-          max_len: Number.isFinite(maxLenValue) ? maxLenValue : undefined,
-          options: Array.from(new Set(options)),
-        } as ManualFormField
-      })
-      .filter(Boolean) as ManualFormField[]
-  }
 
   const manualFormProducts = computed<ManualFormProduct[]>(() => {
     const grouped = new Map<number, ManualFormProduct>()
@@ -474,7 +430,7 @@ export function useCheckout() {
           return
         }
 
-        if ((field.type === 'text' || field.type === 'textarea' || field.type === 'phone' || field.type === 'email') && field.max_len && text.length > field.max_len) {
+        if ((field.type === 'text' || field.type === 'textarea' || field.type === 'phone' || field.type === 'email' || field.type === 'url') && field.max_len && Array.from(text).length > field.max_len) {
           setError(product.itemKey, field, t('checkout.manualFormFieldMaxLength', { name: fieldLabel, max: field.max_len }))
           return
         }
@@ -490,6 +446,15 @@ export function useCheckout() {
           }
           if ((field.min !== undefined && numberValue < field.min) || (field.max !== undefined && numberValue > field.max)) {
             setError(product.itemKey, field, t('checkout.manualFormFieldNumberRange', { name: fieldLabel }))
+            return
+          }
+        }
+        if (field.type === 'url') {
+          try {
+            const url = new URL(text)
+            if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('unsupported URL protocol')
+          } catch {
+            setError(product.itemKey, field, t('checkout.manualFormFieldInvalid', { name: fieldLabel }))
             return
           }
         }
@@ -535,31 +500,7 @@ export function useCheckout() {
     })
   }
 
-  const buildManualFormDataPayload = () => {
-    const payload: Record<string, any> = {}
-    manualFormProducts.value.forEach((product) => {
-      const values = manualFormData.value[product.itemKey] || {}
-      const row: Record<string, any> = {}
-      product.fields.forEach((field) => {
-        const rawValue = values[field.key]
-        if (field.type === 'checkbox') {
-          const list = Array.isArray(rawValue)
-            ? rawValue.map((item: any) => String(item).trim()).filter(Boolean)
-            : []
-          if (list.length > 0) {
-            row[field.key] = list
-          }
-          return
-        }
-        const text = rawValue == null ? '' : String(rawValue).trim()
-        if (text) {
-          row[field.key] = text
-        }
-      })
-      payload[product.itemKey] = row
-    })
-    return payload
-  }
+  const buildOrderManualFormDataPayload = () => buildManualFormDataPayload(manualFormProducts.value, manualFormData.value)
 
   const manualFormFingerprint = computed(() => JSON.stringify(manualFormData.value))
 
@@ -646,7 +587,7 @@ export function useCheckout() {
     affiliate_code: getAffiliateCode() || undefined,
     affiliate_visitor_key: getAffiliateVisitorKey() || undefined,
     items: buildItemsPayload(),
-    manual_form_data: buildManualFormDataPayload(),
+    manual_form_data: buildOrderManualFormDataPayload(),
   })
 
   const loadOrderPaymentChannels = async () => {

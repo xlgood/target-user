@@ -48,6 +48,11 @@ export function validatePurchaseField(field: PurchaseField, value: unknown): Pur
     const options = Array.isArray(field?.options) ? field.options.map(String) : []
     return options.includes(text) ? null : 'option_invalid'
   }
+  if (type === 'checkbox') {
+    if (!Array.isArray(value)) return 'option_invalid'
+    const options = Array.isArray(field?.options) ? field.options.map(String) : []
+    return value.map(String).every((option) => options.includes(option)) ? null : 'option_invalid'
+  }
   return null
 }
 
