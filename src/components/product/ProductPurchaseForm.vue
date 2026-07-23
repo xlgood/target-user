@@ -1,7 +1,7 @@
 <template>
   <section v-if="fields.length" class="rounded-xl border border-primary/25 bg-primary/5 p-4">
-    <h2 class="text-sm font-bold text-foreground">{{ t('productDetail.requiredInformation') }}</h2>
-    <p v-if="hasComments" class="mt-1 text-xs text-muted-foreground">
+    <h2 v-if="showHeading" class="text-sm font-bold text-foreground">{{ t('productDetail.requiredInformation') }}</h2>
+    <p v-if="hasComments" :class="showHeading ? 'mt-1 text-xs text-muted-foreground' : 'text-xs text-muted-foreground'">
       {{ t('productDetail.commentQuantityHint') }}
       <span class="font-semibold text-foreground">{{ commentQuantity }}</span>
     </p>
@@ -83,6 +83,7 @@ const props = defineProps<{
   modelValue: Record<string, any>
   fieldErrors?: Record<string, string>
   commentQuantity: number
+  showHeading?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -93,6 +94,7 @@ const { t } = useI18n()
 const { getLocalizedText } = useLocalized()
 
 const hasComments = computed(() => props.fields.some((field) => String(field?.key || '').trim() === 'comments'))
+const showHeading = computed(() => props.showHeading !== false)
 
 const fieldLabel = (field: any) => getLocalizedText(field?.label) || String(field?.label || field?.key || '')
 const fieldPlaceholder = (field: any) => getLocalizedText(field?.placeholder) || String(field?.placeholder || '')
