@@ -10,6 +10,7 @@
     <div
       v-if="visible"
       class="theme-safe-bottom fixed bottom-0 left-0 right-0 z-40 border-t bg-card/95 shadow-[var(--shadow)] backdrop-blur-xl lg:hidden"
+      :class="catalog === 'accounts' ? 'mobile-buy-account' : catalog === 'services' ? 'mobile-buy-service' : ''"
     >
       <div class="flex items-center gap-3 px-4 py-3">
         <!-- 价格 -->
@@ -21,12 +22,12 @@
           <span v-else class="block truncate text-xl font-extrabold tabular-nums text-primary">{{ productPriceDisplay }}</span>
         </div>
         <!-- 操作 -->
-        <Button v-if="requiresLogin" size="lg" class="flex-none rounded-full font-bold" @click="$emit('goLogin')">{{ t('productDetail.loginToBuy') }}</Button>
-        <template v-else>
-          <Button variant="outline" size="lg" class="flex-none rounded-full font-bold" :disabled="!canPurchase" @click="$emit('addToCart')">
+          <Button v-if="requiresLogin" size="lg" class="flex-none rounded-xl font-bold" :class="catalog === 'accounts' ? '!bg-emerald-600 hover:!bg-emerald-700' : catalog === 'services' ? '!bg-indigo-600 hover:!bg-indigo-700' : ''" @click="$emit('goLogin')">{{ t('productDetail.loginToBuy') }}</Button>
+          <template v-else>
+          <Button variant="outline" size="lg" class="flex-none rounded-xl font-bold" :disabled="!canPurchase" @click="$emit('addToCart')">
             <ShoppingCart /> {{ t('productDetail.addToCart') }}
           </Button>
-          <Button size="lg" class="flex-none rounded-full font-bold" :disabled="!canPurchase" @click="$emit('buyNow')">
+          <Button size="lg" class="flex-none rounded-xl font-bold" :class="catalog === 'accounts' ? '!bg-emerald-600 hover:!bg-emerald-700' : catalog === 'services' ? '!bg-indigo-600 hover:!bg-indigo-700' : ''" :disabled="!canPurchase" @click="$emit('buyNow')">
             <Zap /> {{ t('productDetail.buyNow') }}
           </Button>
         </template>
@@ -44,6 +45,7 @@ const { t } = useI18n()
 
 defineProps<{
   visible: boolean
+  catalog?: string
   requiresLogin: boolean
   canPurchase: boolean
   showMemberPrice: boolean
