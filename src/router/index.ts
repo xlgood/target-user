@@ -122,6 +122,8 @@ const publicLocaleRouteNames = new Set([
     'terms',
     'privacy',
     'account-access-guide',
+    'catalog-products',
+    'catalog-category-products',
 ])
 
 const withLocaleRoutes = (routes: AppRoute[]): AppRoute[] => {
@@ -175,6 +177,16 @@ const baseRoutes: AppRoute[] = [
                 ? templateView('Home', homeViewLoader)()
                 : templateView('Products', productsViewLoader)()
         },
+    },
+    {
+        path: '/:catalog(accounts|services)',
+        name: 'catalog-products',
+        component: templateView('Products', productsViewLoader),
+    },
+    {
+        path: '/:catalog(accounts|services)/categories/:slug',
+        name: 'catalog-category-products',
+        component: templateView('Products', productsViewLoader),
     },
     {
         path: '/products/:slug',

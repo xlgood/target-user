@@ -3,11 +3,15 @@ import { useRouter, useRoute } from 'vue-router'
 import { productAPI, categoryAPI } from '../api'
 import { buildCategoryGroups, createCategoryMap, normalizeCategoryParentId, type PublicCategory } from '../utils/category'
 import { debounceAsync } from '../utils/debounce'
+import { catalogFromRoute } from '../utils/catalog'
+import { routeBaseName } from '../utils/routeNames'
 
 export interface UseProductListOptions {
   pageSize?: number
   homeRouteName?: string
   categoryRouteName?: string
+  catalogRouteName?: string
+  catalogCategoryRouteName?: string
 }
 
 export function useProductList(options: UseProductListOptions = {}) {
@@ -15,6 +19,8 @@ export function useProductList(options: UseProductListOptions = {}) {
     pageSize: defaultPageSize = 20,
     homeRouteName = 'home',
     categoryRouteName = 'category-products',
+    catalogRouteName = 'catalog-products',
+    catalogCategoryRouteName = 'catalog-category-products',
   } = options
 
   const router = useRouter()
@@ -33,6 +39,7 @@ export function useProductList(options: UseProductListOptions = {}) {
 
   const categoryGroups = computed(() => buildCategoryGroups(categories.value))
   const categoryMap = computed(() => createCategoryMap(categories.value))
+  const catalog = computed(() => catalogFromRoute(route.params.catalog))
 
   let initializing = true
 
@@ -91,6 +98,9 @@ export function useProductList(options: UseProductListOptions = {}) {
         page: currentPage.value,
         page_size: pageSize.value,
       }
+      if (catalog.value) {
+        params.catalog = catalog.value
+      }
       if (selectedCategory.value) {
         params.category_id = selectedCategory.value
       }
@@ -112,7 +122,7 @@ export function useProductList(options: UseProductListOptions = {}) {
 
   const loadCategories = async () => {
     try {
-      const response = await categoryAPI.list()
+      const response = await categoryAPI.list(catalog.value ? { catalog: catalog.value } : undefined)
       categories.value = response.data.data || []
     } catch (error) {
       console.error('Failed to load categories:', error)
@@ -141,7 +151,9 @@ export function useProductList(options: UseProductListOptions = {}) {
   }
 
   const syncSelectedCategoryFromRoute = () => {
-    if (route.name !== categoryRouteName) {
+    const baseRouteName = routeBaseName(route.name)
+    const isCategoryRoute = baseRouteName === categoryRouteName || baseRouteName === catalogCategoryRouteName
+    if (!isCategoryRoute) {
       if (selectedCategory.value !== null) {
         selectedCategory.value = null
       }
@@ -170,10 +182,14 @@ export function useProductList(options: UseProductListOptions = {}) {
     if (selectedCategory.value) {
       const matched = categories.value.find((category) => category.id === selectedCategory.value)
       if (matched?.slug && route.params.slug !== matched.slug) {
-        router.replace({ name: categoryRouteName, params: { slug: matched.slug } })
+        if (catalog.value) {
+          router.replace({ name: catalogCategoryRouteName, params: { catalog: catalog.value, slug: matched.slug } })
+        } else {
+          router.replace({ name: categoryRouteName, params: { slug: matched.slug } })
+        }
       }
-    } else if (route.name === categoryRouteName) {
-      router.replace({ name: homeRouteName })
+    } else if (routeBaseName(route.name) === categoryRouteName || routeBaseName(route.name) === catalogCategoryRouteName) {
+      router.replace(catalog.value ? { name: catalogRouteName, params: { catalog: catalog.value } } : { name: homeRouteName })
     }
   })
 
@@ -189,6 +205,17 @@ export function useProductList(options: UseProductListOptions = {}) {
       if (initializing) return
       if (categories.value.length === 0) return
       syncSelectedCategoryFromRoute()
+    },
+  )
+
+  watch(
+    () => route.params.catalog,
+    async () => {
+      if (initializing) return
+      selectedCategory.value = null
+      currentPage.value = 1
+      await loadCategories()
+      await loadProducts()
     },
   )
 
@@ -218,6 +245,7 @@ export function useProductList(options: UseProductListOptions = {}) {
     expandedParentIds,
     categoryGroups,
     categoryMap,
+    catalog,
     isParentExpanded,
     toggleParentCategory,
     getParentToggleButtonClass,

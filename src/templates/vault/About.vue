@@ -1,11 +1,11 @@
 <template>
-  <div class="mx-auto w-full max-w-[840px] px-6 pb-10 pt-2">
-    <header class="my-8 text-center">
-      <h1 class="mb-2.5 text-4xl font-extrabold">{{ heroTitle }}</h1>
-      <p class="text-muted-foreground">{{ heroSubtitle }}</p>
+  <div class="mx-auto w-full max-w-[900px] px-4 pb-10 pt-2 sm:px-6">
+    <header class="relative my-6 overflow-hidden rounded-[26px] border bg-[color:var(--bg-deep)] px-6 py-10 text-center sm:px-9">
+      <div class="relative"><p class="text-xs font-extrabold uppercase tracking-[.14em] text-violet-200">{{ t('storefront.promiseEyebrow') }}</p><h1 class="mt-3 text-4xl font-extrabold text-white">{{ heroTitle }}</h1><p class="mx-auto mt-3 max-w-xl text-white/65">{{ heroSubtitle }}</p></div>
+      <Check class="absolute -bottom-10 -right-3 h-40 w-40 text-white opacity-[.08]" />
     </header>
 
-    <Card class="p-7 sm:p-[34px]">
+    <Card class="rounded-[26px] p-7 shadow-[var(--shadow-sm)] sm:p-[34px]">
       <div v-if="hasIntroduction" class="mb-9 last:mb-0">
         <p class="whitespace-pre-line text-base leading-[1.8] text-muted-foreground">{{ introductionText }}</p>
       </div>
@@ -47,9 +47,12 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { Check } from 'lucide-vue-next'
 import { Card } from '@/components/ui/card'
 import { useAbout } from '../../composables/useAbout'
+
+const { t } = useI18n()
 
 const {
   contactConfig, heroTitle, heroSubtitle, introductionText, servicesTitle, contactTitle, contactText,

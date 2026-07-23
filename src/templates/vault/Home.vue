@@ -1,340 +1,95 @@
 <template>
   <div>
-    <!-- 站长配置的横幅轮播（两种模式共用，顶部展示） -->
-    <VaultBannerHero />
-
-    <!-- ==================== 列表模式 ==================== -->
-    <template v-if="isListMode">
-      <section class="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-6">
-        <div class="grid items-start gap-5 lg:grid-cols-[248px_1fr] lg:gap-7">
-          <VaultCategorySidebar
-            :category-groups="categoryGroups"
-            :selected-category="selectedCategory"
-            :expanded-parent-ids="expandedParentIds"
-            @select="selectCategory"
-            @toggle="toggleParentCategory"
-          />
-
-          <main class="min-w-0">
-            <!-- 搜索 -->
-            <div class="relative mb-4">
-              <Search class="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
-              <input
-                v-model="searchQuery"
-                class="h-11 w-full rounded-xl border border-border bg-card pl-10 pr-10 text-[15px] text-foreground transition-colors placeholder:text-muted-foreground hover:border-hairline-strong"
-                :placeholder="t('products.searchBoxPlaceholder')"
-                :aria-label="t('products.searchLabel')"
-              />
-              <button v-if="searchQuery" type="button" class="absolute right-2.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" :aria-label="t('blog.searchClear')" @click="clearSearch"><X class="h-3.5 w-3.5" /></button>
-            </div>
-
-            <!-- 骨架 -->
-            <div v-if="listLoading" class="space-y-2.5">
-              <div v-for="i in 8" :key="i" class="h-[76px] rounded-lg border bg-card"></div>
-            </div>
-
-            <!-- 分组列表 -->
-            <div v-else-if="listProductGroups.length" class="space-y-6">
-              <div v-for="group in listProductGroups" :key="group.categoryId ?? 'uncategorized'">
-                <div class="mb-2.5 flex items-center gap-2 px-0.5">
-                  <span class="h-4 w-1 flex-none rounded-full bg-primary"></span>
-                  <img v-if="group.categoryIcon" :src="getImageUrl(group.categoryIcon)" :alt="group.categoryName" loading="lazy" class="h-5 w-5 flex-none rounded object-cover" />
-                  <span class="min-w-0 truncate text-sm font-bold text-foreground">{{ group.categoryName }}</span>
-                  <span class="flex-none text-xs text-muted-foreground">({{ group.products.length }})</span>
-                </div>
-                <div class="space-y-2">
-                  <VaultProductListItem
-                    v-for="(product, idx) in group.products"
-                    :key="product.id"
-                    :product="product"
-                    :index="idx"
-                    @quick-buy="openQuickBuy"
-                  />
-                </div>
-              </div>
-
-              <nav v-if="listTotalPages > 1" class="mt-[30px] flex flex-wrap justify-center gap-2">
-                <button class="grid h-[42px] min-w-[42px] place-items-center rounded-full border bg-card px-3 font-bold text-muted-foreground hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40" :disabled="listCurrentPage <= 1" @click="listChangePage(listCurrentPage - 1)"><ChevronLeft class="h-[17px] w-[17px]" /></button>
-                <button
-                  v-for="p in listPageWindow"
-                  :key="p"
-                  class="grid h-[42px] min-w-[42px] place-items-center rounded-full border px-3 text-sm font-bold"
-                  :class="p === listCurrentPage ? 'border-primary bg-primary text-white' : 'border-border bg-card text-muted-foreground hover:border-primary hover:text-primary'"
-                  @click="listChangePage(p)"
-                >{{ p }}</button>
-                <button class="grid h-[42px] min-w-[42px] place-items-center rounded-full border bg-card px-3 font-bold text-muted-foreground hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40" :disabled="listCurrentPage >= listTotalPages" @click="listChangePage(listCurrentPage + 1)"><ChevronRight class="h-[17px] w-[17px]" /></button>
-              </nav>
-            </div>
-
-            <!-- 空态 -->
-            <div v-else class="flex flex-col items-center gap-3 rounded-lg border border-dashed py-14 text-center text-muted-foreground">
-              <component :is="(searchQuery || selectedCategory) ? SearchX : PackageOpen" class="h-12 w-12 opacity-60" />
-              <p>{{ (searchQuery || selectedCategory) ? t('products.emptyFiltered') : t('products.empty') }}</p>
-              <Button v-if="searchQuery || selectedCategory" variant="outline" size="sm" class="mt-2 rounded-full" @click="resetFilters">{{ t('products.clearFilters') }}</Button>
-            </div>
-          </main>
-        </div>
-      </section>
-    </template>
-
-    <!-- ==================== 卡片模式（默认） ==================== -->
-    <template v-else>
-      <!-- 分类块 -->
-      <section v-if="topCategories.length" class="mx-auto w-full max-w-[1180px] px-4 py-12 sm:px-6">
-        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-[0.14em] text-primary">{{ t('nav.products') }}</p>
-            <h2 class="mt-2 text-3xl font-extrabold tracking-[-0.03em]">{{ t('vault.categoriesTitle') }}</h2>
+    <section class="relative overflow-hidden border-b border-border bg-[color:var(--bg-deep)] text-white">
+      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_5%,rgba(104,98,255,.42),transparent_31%),radial-gradient(circle_at_85%_48%,rgba(15,159,127,.22),transparent_28%)]"></div>
+      <div class="relative mx-auto grid min-h-[510px] max-w-[1240px] items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_.95fr] lg:py-20">
+        <div>
+          <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-xs font-bold text-white/75"><span class="h-2 w-2 rounded-full bg-emerald-300"></span>{{ t('storefront.heroEyebrow') }}</div>
+          <h1 class="mt-6 max-w-[14ch] text-4xl font-extrabold leading-[1.08] tracking-[-.05em] text-white sm:text-5xl lg:text-[58px]">{{ t('storefront.heroTitle') }}</h1>
+          <p class="mt-5 max-w-xl text-base leading-7 text-white/65 sm:text-lg">{{ t('storefront.heroLede') }}</p>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <RouterLink to="/accounts" class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-extrabold text-[color:var(--bg-deep)] transition hover:-translate-y-0.5"><ShieldCheck class="h-4 w-4" />{{ t('storefront.catalog.accounts') }}<ArrowRight class="h-4 w-4" /></RouterLink>
+            <RouterLink to="/services" class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/8 px-5 text-sm font-extrabold text-white transition hover:bg-white/15"><TrendingUp class="h-4 w-4" />{{ t('storefront.catalog.services') }}<ArrowRight class="h-4 w-4" /></RouterLink>
           </div>
-          <Button as-child variant="outline" size="sm" class="rounded-full"><RouterLink to="/products">{{ t('vault.allCategories') }} <ChevronRight /></RouterLink></Button>
+          <div class="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-white/60"><span class="inline-flex items-center gap-2"><Zap class="h-4 w-4 text-amber-300" />{{ t('storefront.heroTrust.fast') }}</span><span class="inline-flex items-center gap-2"><LockKeyhole class="h-4 w-4 text-emerald-300" />{{ t('storefront.heroTrust.private') }}</span><span class="inline-flex items-center gap-2"><CircleHelp class="h-4 w-4 text-violet-200" />{{ t('storefront.heroTrust.support') }}</span></div>
         </div>
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <RouterLink
-            v-for="(cat, idx) in topCategories"
-            :key="cat.id"
-            class="group relative flex min-h-[92px] items-center gap-3 overflow-hidden rounded-xl border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[var(--shadow)]"
-            :class="catColor(idx)"
-            :to="`/categories/${cat.slug}`"
-          >
-            <span class="grid h-10 w-10 flex-none place-items-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-              <img v-if="cat.icon" :src="getImageUrl(cat.icon)" :alt="catName(cat)" loading="lazy" class="h-5 w-5 object-contain" />
-              <Tag v-else class="h-5 w-5" />
-            </span>
-            <div class="min-w-0"><div class="line-clamp-2 break-words text-sm font-bold text-foreground">{{ catName(cat) }}</div></div>
-            <ChevronRight class="ml-auto h-4 w-4 flex-none text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          <RouterLink to="/accounts" class="group relative overflow-hidden rounded-[26px] border border-emerald-300/20 bg-[linear-gradient(145deg,rgba(15,159,127,.35),rgba(13,27,45,.9))] p-6 shadow-2xl transition hover:-translate-y-1 hover:border-emerald-300/50 sm:min-h-[204px]">
+            <div class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-emerald-300/15 blur-2xl"></div><ShieldCheck class="h-8 w-8 text-emerald-200" /><p class="mt-6 text-xs font-bold uppercase tracking-[.14em] text-emerald-200/70">{{ t('storefront.lane.accountEyebrow') }}</p><h2 class="mt-2 text-2xl font-extrabold text-white">{{ t('storefront.catalog.accounts') }}</h2><p class="mt-2 text-sm leading-6 text-white/65">{{ t('storefront.lane.accountDescription') }}</p><span class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-emerald-200">{{ t('storefront.explore') }}<ArrowRight class="h-4 w-4 transition group-hover:translate-x-1" /></span>
+          </RouterLink>
+          <RouterLink to="/services" class="group relative overflow-hidden rounded-[26px] border border-violet-300/20 bg-[linear-gradient(145deg,rgba(91,92,226,.4),rgba(13,27,45,.9))] p-6 shadow-2xl transition hover:-translate-y-1 hover:border-violet-300/50 sm:min-h-[204px]">
+            <div class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-violet-300/15 blur-2xl"></div><TrendingUp class="h-8 w-8 text-violet-200" /><p class="mt-6 text-xs font-bold uppercase tracking-[.14em] text-violet-200/70">{{ t('storefront.lane.serviceEyebrow') }}</p><h2 class="mt-2 text-2xl font-extrabold text-white">{{ t('storefront.catalog.services') }}</h2><p class="mt-2 text-sm leading-6 text-white/65">{{ t('storefront.lane.serviceDescription') }}</p><span class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-violet-200">{{ t('storefront.explore') }}<ArrowRight class="h-4 w-4 transition group-hover:translate-x-1" /></span>
           </RouterLink>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- 热门商品 -->
-      <section class="mx-auto w-full max-w-[1180px] px-4 pb-14 sm:px-6">
-        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-[0.14em] text-primary">{{ t('home.featured.title') }}</p>
-            <h2 class="mt-2 text-3xl font-extrabold tracking-[-0.03em]">{{ t('home.featured.title') }}</h2>
-          </div>
-          <Button as-child variant="outline" size="sm" class="rounded-full"><RouterLink to="/products">{{ t('home.featured.viewAll') }}</RouterLink></Button>
-        </div>
+    <section class="mx-auto grid w-full max-w-[1240px] grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-[var(--shadow-sm)] sm:grid-cols-4">
+      <div v-for="item in trustItems" :key="item.label" class="bg-card px-4 py-5 text-center sm:px-6"><component :is="item.icon" class="mx-auto h-5 w-5 text-primary" /><p class="mt-2 text-sm font-extrabold text-foreground">{{ item.value }}</p><p class="mt-0.5 text-xs text-muted-foreground">{{ item.label }}</p></div>
+    </section>
 
-        <div v-if="productsLoading" class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(228px,1fr))]">
-          <div v-for="i in 10" :key="i" class="h-[280px] rounded-lg border bg-card"></div>
-        </div>
-        <div v-else-if="products.length" class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(228px,1fr))]">
-          <VaultProductCard
-            v-for="(product, idx) in products"
-            :key="product.id"
-            :product="product"
-            :index="idx"
-            @quick-buy="openQuickBuy"
-          />
-        </div>
-        <div v-else class="relative overflow-hidden rounded-2xl border border-dashed border-primary/25 bg-card/50 px-6 py-14 text-center text-muted-foreground">
-          <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary"><PackageOpen class="h-7 w-7" /></div>
-          <p class="mt-4 text-base font-bold text-foreground">{{ t('home.featured.empty') }}</p>
-          <p class="mx-auto mt-2 max-w-md text-sm leading-6">{{ t('products.subtitle') }}</p>
-          <Button as-child variant="outline" size="sm" class="mt-5 rounded-full"><RouterLink to="/products">{{ t('home.featured.viewAll') }}</RouterLink></Button>
-        </div>
-      </section>
+    <section class="mx-auto w-full max-w-[1240px] px-4 pt-[var(--gap-block)] sm:px-6">
+      <div class="flex flex-wrap items-end justify-between gap-4"><div><p class="eyebrow">{{ t('storefront.catalogEyebrow') }}</p><h2 class="mt-2 text-3xl font-extrabold tracking-[-.04em]">{{ t('storefront.catalogTitle') }}</h2><p class="mt-3 max-w-2xl text-muted-foreground">{{ t('storefront.catalogLede') }}</p></div></div>
+      <div class="mt-8 grid gap-5 lg:grid-cols-2">
+        <RouterLink to="/accounts" class="catalog-panel catalog-panel-accounts group"><div class="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"><ShieldCheck class="h-6 w-6" /></div><div class="mt-7"><p class="eyebrow !text-emerald-700 dark:!text-emerald-300">{{ t('storefront.lane.accountEyebrow') }}</p><h3 class="mt-2 text-2xl font-extrabold">{{ t('storefront.catalog.accounts') }}</h3><p class="mt-3 max-w-[48ch] text-sm leading-6 text-muted-foreground">{{ t('storefront.lane.accountDescription') }}</p></div><div class="mt-8 flex flex-wrap gap-2"><span v-for="item in accountHighlights" :key="item" class="rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-200">{{ item }}</span></div><span class="mt-8 inline-flex items-center gap-2 text-sm font-extrabold text-emerald-700 dark:text-emerald-300">{{ t('storefront.browseAccounts') }}<ArrowRight class="h-4 w-4 transition group-hover:translate-x-1" /></span></RouterLink>
+        <RouterLink to="/services" class="catalog-panel catalog-panel-services group"><div class="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary"><TrendingUp class="h-6 w-6" /></div><div class="mt-7"><p class="eyebrow">{{ t('storefront.lane.serviceEyebrow') }}</p><h3 class="mt-2 text-2xl font-extrabold">{{ t('storefront.catalog.services') }}</h3><p class="mt-3 max-w-[48ch] text-sm leading-6 text-muted-foreground">{{ t('storefront.lane.serviceDescription') }}</p></div><div class="mt-8 flex flex-wrap gap-2"><span v-for="item in serviceHighlights" :key="item" class="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary">{{ item }}</span></div><span class="mt-8 inline-flex items-center gap-2 text-sm font-extrabold text-primary">{{ t('storefront.browseServices') }}<ArrowRight class="h-4 w-4 transition group-hover:translate-x-1" /></span></RouterLink>
+      </div>
+    </section>
 
-      <!-- 最新动态 -->
-      <section v-if="latestVisible && posts.length" class="mx-auto w-full max-w-[1180px] px-4 py-9 sm:px-6">
-        <div class="mb-[22px] flex flex-wrap items-end justify-between gap-4">
-          <h2 class="text-[28px] font-extrabold">{{ t('home.latest.title') }}</h2>
-        </div>
-        <div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(228px,1fr))]">
-          <RouterLink
-            v-for="post in posts"
-            :key="post.id"
-            class="block h-full rounded-lg border bg-card p-[22px] transition hover:-translate-y-[3px] hover:border-hairline-strong hover:shadow-[var(--shadow)]"
-            :to="`/blog/${post.slug}`"
-          >
-            <span class="text-[12.5px] font-semibold text-muted-foreground">{{ formatDate(post.published_at) }}</span>
-            <h3 class="mt-2 line-clamp-2 text-[17px] font-bold">{{ getLocalizedText(post.title) }}</h3>
-            <p class="mt-2 line-clamp-2 text-sm text-muted-foreground">{{ getLocalizedText(post.summary) }}</p>
-            <span class="mt-3.5 inline-flex items-center gap-1.5 text-sm font-bold text-primary">{{ t('blog.readMore') }} <ChevronRight class="h-4 w-4" /></span>
-          </RouterLink>
-        </div>
-      </section>
-    </template>
+    <section class="mx-auto w-full max-w-[1240px] px-4 pt-[var(--gap-block)] sm:px-6"><div class="flex flex-wrap items-end justify-between gap-4"><div><p class="eyebrow">{{ t('storefront.platformEyebrow') }}</p><h2 class="mt-2 text-3xl font-extrabold tracking-[-.04em]">{{ t('storefront.platformTitle') }}</h2></div><RouterLink to="/services" class="inline-flex items-center gap-1 text-sm font-bold text-primary">{{ t('storefront.viewAll') }}<ArrowRight class="h-4 w-4" /></RouterLink></div><div v-if="platformsLoading" class="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"><div v-for="item in 6" :key="item" class="h-28 rounded-2xl border bg-card"></div></div><div v-else-if="platforms.length" class="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"><RouterLink v-for="platform in platforms" :key="platform.slug" :to="catalogPath('services', platform.slug)" class="platform-card"><img :src="categoryImage(platform)" :alt="categoryName(platform)" loading="lazy" class="h-11 w-11 object-contain" /><span class="mt-3 line-clamp-2 text-center text-sm font-bold">{{ categoryName(platform) }}</span></RouterLink></div></section>
 
-    <ProductQuickBuy
-      v-if="quickBuyProduct"
-      :product="quickBuyProduct"
-      :visible="quickBuyVisible"
-      @update:visible="quickBuyVisible = $event"
-    />
+    <section class="mx-auto w-full max-w-[1240px] px-4 pt-[var(--gap-block)] sm:px-6"><div class="rounded-[28px] border border-border bg-card px-6 py-8 sm:px-9 lg:grid lg:grid-cols-[.75fr_1.25fr] lg:gap-12 lg:py-10"><div><p class="eyebrow">{{ t('storefront.promiseEyebrow') }}</p><h2 class="mt-2 text-3xl font-extrabold tracking-[-.04em]">{{ t('storefront.promiseTitle') }}</h2><p class="mt-4 text-sm leading-7 text-muted-foreground">{{ t('storefront.promiseLede') }}</p><RouterLink to="/about" class="mt-6 inline-flex items-center gap-2 text-sm font-bold text-primary">{{ t('storefront.learnMore') }}<ArrowRight class="h-4 w-4" /></RouterLink></div><div class="mt-8 grid gap-4 sm:grid-cols-3 lg:mt-0"><div v-for="item in promiseItems" :key="item.title" class="rounded-2xl bg-secondary p-5"><component :is="item.icon" class="h-6 w-6 text-primary" /><h3 class="mt-5 text-base font-extrabold">{{ item.title }}</h3><p class="mt-2 text-sm leading-6 text-muted-foreground">{{ item.description }}</p></div></div></div></section>
 
-    <AnnouncementModal
-      v-if="activeAnnouncement"
-      :announcement="activeAnnouncement"
-      :visible="announcementVisible"
-      @update:visible="announcementVisible = $event"
-    />
+    <section v-if="posts.length" class="mx-auto w-full max-w-[1240px] px-4 pt-[var(--gap-block)] sm:px-6"><div class="flex items-end justify-between gap-3"><div><p class="eyebrow">{{ t('storefront.updateEyebrow') }}</p><h2 class="mt-2 text-3xl font-extrabold tracking-[-.04em]">{{ t('storefront.updateTitle') }}</h2></div><RouterLink to="/notice" class="text-sm font-bold text-primary">{{ t('storefront.viewAll') }}</RouterLink></div><div class="mt-7 grid gap-4 md:grid-cols-3"><RouterLink v-for="post in posts" :key="post.id" :to="`/blog/${post.slug}`" class="rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:shadow-[var(--shadow)]"><span class="text-xs font-semibold text-muted-foreground">{{ formatDate(post.published_at) }}</span><h3 class="mt-3 line-clamp-2 text-lg font-extrabold">{{ getLocalizedText(post.title) }}</h3><p class="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">{{ getLocalizedText(post.summary) }}</p><span class="mt-5 inline-flex items-center gap-1 text-sm font-bold text-primary">{{ t('storefront.readMore') }}<ArrowRight class="h-4 w-4" /></span></RouterLink></div></section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronLeft, ChevronRight, PackageOpen, Search, SearchX, Tag, X } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { categoryAPI, postAPI, productAPI } from '../../api'
+import { ArrowRight, CircleHelp, LockKeyhole, ShieldCheck, TrendingUp, Zap } from 'lucide-vue-next'
+import { categoryAPI, postAPI } from '../../api'
 import { buildCategoryGroups, type PublicCategory } from '../../utils/category'
+import { catalogPath, categoryImagePath } from '../../utils/catalog'
 import { getImageUrl } from '../../utils/image'
-import { routeBaseName } from '../../utils/routeNames'
 import { useLocalized } from '../../composables/useProduct'
-import { useProductList } from '../../composables/useProductList'
-import { useProductListGroups } from '../../composables/useProductListGroups'
-import { usePageSeo } from '../../composables/usePageSeo'
-import { useAppStore } from '../../stores/app'
-import VaultProductCard from './components/VaultProductCard.vue'
-import VaultProductListItem from './components/VaultProductListItem.vue'
-import VaultCategorySidebar from './components/VaultCategorySidebar.vue'
-import VaultBannerHero from './components/VaultBannerHero.vue'
-import ProductQuickBuy from '../../components/ProductQuickBuy.vue'
-import AnnouncementModal from '../../components/AnnouncementModal.vue'
-import { useAnnouncement, type HomeAnnouncement } from '../../composables/useAnnouncement'
 
-const route = useRoute()
 const { t } = useI18n()
 const { getLocalizedText } = useLocalized()
-const appStore = useAppStore()
-
-const isListMode = computed(() => appStore.config?.template_mode === 'list')
-
-// ==================== 快速购买 ====================
-const quickBuyProduct = ref<any>(null)
-const quickBuyVisible = ref(false)
-const openQuickBuy = (product: any) => {
-  quickBuyProduct.value = product
-  quickBuyVisible.value = true
-}
-
-// ==================== 列表模式 ====================
-const {
-  loading: listLoading,
-  products: listProducts,
-  selectedCategory,
-  searchQuery,
-  currentPage: listCurrentPage,
-  totalPages: listTotalPages,
-  expandedParentIds,
-  categoryGroups,
-  categoryMap: listCategoryMap,
-  selectCategory,
-  toggleParentCategory,
-  changePage: listChangePage,
-  clearSearch,
-  initialize: listInitialize,
-  cleanup: listCleanup,
-} = useProductList({ pageSize: 20, homeRouteName: 'home' })
-
-const listProductGroups = useProductListGroups(listProducts, listCategoryMap)
-
-const listPageWindow = computed(() => {
-  const total = listTotalPages.value
-  const cur = listCurrentPage.value
-  const start = Math.max(1, cur - 2)
-  const end = Math.min(total, start + 4)
-  const realStart = Math.max(1, end - 4)
-  const pages: number[] = []
-  for (let p = realStart; p <= end; p++) pages.push(p)
-  return pages
-})
-
-const resetFilters = () => {
-  clearSearch()
-  selectCategory(null)
-}
-
-// ==================== 卡片模式 ====================
-const products = ref<any[]>([])
-const productsLoading = ref(true)
+const platforms = ref<PublicCategory[]>([])
+const platformsLoading = ref(true)
 const posts = ref<any[]>([])
-const topCategories = ref<PublicCategory[]>([])
-
-const catColor = (_idx: number) => ''
-const catName = (cat: PublicCategory) => getLocalizedText(cat.name) || cat.slug || ''
-
-const navBuiltin = computed(() => (appStore.config?.nav_config as { builtin?: Record<string, boolean> } | undefined)?.builtin)
-const blogEnabled = computed(() => navBuiltin.value?.blog !== false)
-const noticeEnabled = computed(() => navBuiltin.value?.notice !== false)
-const latestVisible = computed(() => blogEnabled.value || noticeEnabled.value)
-
-const formatDate = (value: string) => (value ? new Date(value).toLocaleDateString() : '')
-
-// ==================== 公告弹窗（版本化可关闭，两种模式共用） ====================
-const { shouldShow } = useAnnouncement()
-const activeAnnouncement = ref<HomeAnnouncement | null>(null)
-const announcementVisible = ref(false)
-const showAnnouncementIfNeeded = () => {
-  const announcement = appStore.config?.announcement as HomeAnnouncement | undefined
-  if (announcement && shouldShow(announcement)) {
-    activeAnnouncement.value = announcement
-    announcementVisible.value = true
-  }
-}
-
-const loadProducts = async () => {
-  productsLoading.value = true
-  try {
-    const res = await productAPI.list({ page: 1, page_size: 15 })
-    products.value = res.data.data || []
-  } catch (err) {
-    console.error('Failed to load products:', err)
-  } finally {
-    productsLoading.value = false
-  }
-}
-
-const loadCategories = async () => {
-  try {
-    const res = await categoryAPI.list()
-    topCategories.value = buildCategoryGroups(res.data.data || []).slice(0, 10)
-  } catch (err) {
-    console.error('Failed to load categories:', err)
-  }
-}
-
-const loadPosts = async () => {
-  if (!latestVisible.value) return
-  try {
-    const params: Record<string, unknown> = { page: 1, page_size: 3 }
-    if (blogEnabled.value && !noticeEnabled.value) params.type = 'blog'
-    if (!blogEnabled.value && noticeEnabled.value) params.type = 'notice'
-    const res = await postAPI.list(params)
-    posts.value = res.data.data || []
-  } catch (err) {
-    console.error('Failed to load posts:', err)
-  }
-}
-
-// ==================== SEO ====================
-const seoCategoryName = computed(() => {
-  if (!selectedCategory.value) return ''
-  const cat = listCategoryMap.value.get(selectedCategory.value)
-  return cat ? catName(cat) : ''
-})
-usePageSeo({
-  canonicalPath: () => route.path,
-  title: () => {
-    const name = routeBaseName(route.name)
-    if (name === 'category-products') return seoCategoryName.value || t('nav.products')
-    if (name === 'products') return t('nav.products')
-    return undefined
-  },
-})
+const categoryName = (category: PublicCategory) => getLocalizedText(category.name) || category.slug || ''
+const categoryImage = (category: PublicCategory) => getImageUrl(categoryImagePath(category))
+const formatDate = (value: string) => value ? new Date(value).toLocaleDateString() : ''
+const accountHighlights = computed(() => [t('storefront.accountHighlights.one'), t('storefront.accountHighlights.two'), t('storefront.accountHighlights.three')])
+const serviceHighlights = computed(() => [t('storefront.serviceHighlights.one'), t('storefront.serviceHighlights.two'), t('storefront.serviceHighlights.three')])
+const trustItems = computed(() => [
+  { icon: Zap, value: t('storefront.trust.fastValue'), label: t('storefront.trust.fastLabel') },
+  { icon: ShieldCheck, value: t('storefront.trust.safeValue'), label: t('storefront.trust.safeLabel') },
+  { icon: LockKeyhole, value: t('storefront.trust.privateValue'), label: t('storefront.trust.privateLabel') },
+  { icon: CircleHelp, value: t('storefront.trust.supportValue'), label: t('storefront.trust.supportLabel') },
+])
+const promiseItems = computed(() => [
+  { icon: ShieldCheck, title: t('storefront.promise.one.title'), description: t('storefront.promise.one.description') },
+  { icon: Zap, title: t('storefront.promise.two.title'), description: t('storefront.promise.two.description') },
+  { icon: CircleHelp, title: t('storefront.promise.three.title'), description: t('storefront.promise.three.description') },
+])
 
 onMounted(async () => {
-  await appStore.loadConfig()
-  if (isListMode.value) {
-    await listInitialize()
-  } else {
-    await Promise.all([loadProducts(), loadCategories(), loadPosts()])
-  }
-  showAnnouncementIfNeeded()
+  try {
+    const response = await categoryAPI.list({ catalog: 'services' })
+    platforms.value = buildCategoryGroups(response.data.data || []).slice(0, 12)
+  } finally { platformsLoading.value = false }
+  try { posts.value = (await postAPI.list({ page: 1, page_size: 3 })).data.data || [] } catch { posts.value = [] }
 })
-
-onUnmounted(() => listCleanup())
 </script>
+
+<style scoped>
+.eyebrow { color: var(--red); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.catalog-panel { position: relative; overflow: hidden; min-height: 330px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); padding: 30px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.catalog-panel:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.catalog-panel::after { content: ''; position: absolute; right: -50px; bottom: -70px; width: 200px; height: 200px; border-radius: 50%; opacity: .5; filter: blur(6px); }
+.catalog-panel-accounts::after { background: var(--teal-soft); }.catalog-panel-services::after { background: var(--red-soft); }
+.catalog-panel > * { position: relative; z-index: 1; }.platform-card { display: flex; min-height: 126px; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); padding: 18px 12px; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }.platform-card:hover { transform: translateY(-3px); border-color: var(--red); box-shadow: var(--shadow); }
+</style>

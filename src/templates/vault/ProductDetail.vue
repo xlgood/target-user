@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto w-full max-w-[1180px] px-6 pb-6">
+  <div class="mx-auto w-full max-w-[1240px] px-4 pb-6 sm:px-6" :class="product?.catalog === 'accounts' ? 'detail-accounts' : product?.catalog === 'services' ? 'detail-services' : ''">
     <!-- Loading -->
     <div v-if="loading" class="grid gap-11 py-2.5 lg:grid-cols-2">
       <div class="h-[380px] rounded-xl bg-[linear-gradient(135deg,#3a3950,var(--ink))] opacity-50"></div>
@@ -15,15 +15,15 @@
       <nav class="flex flex-wrap items-center gap-1.5 py-5 pb-2 text-[13.5px] font-semibold text-muted-foreground">
         <RouterLink to="/" class="hover:text-primary">{{ t('nav.home') }}</RouterLink>
         <ChevronRight class="h-4 w-4 flex-none" />
-        <RouterLink to="/products" class="hover:text-primary">{{ t('nav.products') }}</RouterLink>
+        <RouterLink :to="catalogBackPath" class="hover:text-primary">{{ catalogBackLabel }}</RouterLink>
         <ChevronRight class="h-4 w-4 flex-none" />
         <span class="text-foreground">{{ getLocalizedText(product.title) }}</span>
       </nav>
 
-      <section class="grid gap-11 py-2.5 lg:grid-cols-2">
+      <section class="grid gap-7 py-2.5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,.9fr)] lg:gap-11">
         <!-- 图区 -->
         <div>
-          <div class="relative grid h-[380px] place-items-center overflow-hidden rounded-xl" :class="images.length ? '' : 'bg-[linear-gradient(135deg,#7b74f2,var(--red))]'">
+          <div class="relative grid h-[380px] place-items-center overflow-hidden rounded-[26px] border bg-card shadow-[var(--shadow-sm)]" :class="images.length ? '' : 'bg-[linear-gradient(135deg,#7b74f2,var(--red))]'">
             <img v-if="currentImage" :src="currentImage" :alt="getLocalizedText(product.title)" class="absolute inset-0 h-full w-full" :class="isProviderCatalogImage(currentImage) ? 'object-contain' : 'object-cover'" />
             <Package v-else class="h-[110px] w-[110px] text-white/95" />
           </div>
@@ -41,7 +41,11 @@
         </div>
 
         <!-- 购买区 -->
-        <div>
+        <div class="rounded-[26px] border bg-card p-5 shadow-[var(--shadow-sm)] sm:p-7">
+          <div class="mb-5 flex items-center justify-between gap-3 border-b border-border pb-4">
+            <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-extrabold" :class="isAccount ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : isService ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'"><component :is="isAccount ? ShieldCheck : isService ? TrendingUp : Package" class="h-3.5 w-3.5" />{{ catalogBackLabel }}</span>
+            <span class="text-xs font-semibold text-muted-foreground">{{ isAccount ? t('storefront.detail.accountHint') : isService ? t('storefront.detail.serviceHint') : t('products.fulfillmentType.manual') }}</span>
+          </div>
           <span v-if="categoryName" class="block truncate text-[13px] font-semibold text-muted-foreground">{{ categoryName }}</span>
           <h1 class="my-2 mb-3 text-[32px] font-extrabold">{{ getLocalizedText(product.title) }}</h1>
 
@@ -155,7 +159,8 @@
             <p v-if="requiresSKUSelection" class="mt-2 text-[13px] text-warning">{{ t('productDetail.skuRequired') }}</p>
           </div>
 
-          <div v-if="checkoutFields.length" class="my-5">
+          <div v-if="checkoutFields.length" class="my-5 rounded-2xl border border-primary/15 bg-primary/[.03] p-3 sm:p-4">
+            <div class="mb-3 flex items-center gap-2"><component :is="isAccount ? KeyRound : Link" class="h-4 w-4 text-primary" /><span class="text-sm font-extrabold">{{ isAccount ? t('storefront.list.accountForm') : t('storefront.list.serviceForm') }}</span></div>
             <ProductPurchaseForm v-model="purchaseFormData" :fields="checkoutFields" :field-errors="purchaseFormFieldErrors" :comment-quantity="commentQuantity" />
           </div>
 
@@ -218,7 +223,7 @@
       </section>
 
       <div class="py-6 text-center">
-        <Button as-child variant="ghost" size="sm" class="rounded-full"><RouterLink to="/products"><ArrowLeft /> {{ t('productDetail.backToProducts') }}</RouterLink></Button>
+        <Button as-child variant="ghost" size="sm" class="rounded-full"><RouterLink :to="catalogBackPath"><ArrowLeft /> {{ catalogBackLabel }}</RouterLink></Button>
       </div>
 
       <!-- 移动端固定购买条 -->
@@ -257,8 +262,8 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  AlertCircle, ArrowLeft, ChevronRight, Lock, Minus, Package, Pencil, Plus,
-  RotateCw, ShoppingCart, Tag, TicketCheck, UserPlus, Zap,
+  AlertCircle, ArrowLeft, ChevronRight, KeyRound, Link, Lock, Minus, Package, Pencil, Plus,
+  RotateCw, ShieldCheck, ShoppingCart, Tag, TicketCheck, TrendingUp, UserPlus, Zap,
 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { isProviderCatalogImage } from '../../utils/image'
@@ -318,6 +323,11 @@ const stockPillTone = computed(() => {
   if (variant === 'warning') return 'bg-[color:var(--gold-soft)] text-[color:var(--gold-strong)]'
   return 'bg-[color:var(--teal-soft)] text-[color:var(--teal-strong)]'
 })
+
+const isAccount = computed(() => product.value?.catalog === 'accounts')
+const isService = computed(() => product.value?.catalog === 'services')
+const catalogBackPath = computed(() => isAccount.value ? '/accounts' : isService.value ? '/services' : '/products')
+const catalogBackLabel = computed(() => isAccount.value ? t('storefront.catalog.accounts') : isService.value ? t('storefront.catalog.services') : t('nav.products'))
 
 onUnmounted(() => {
   if (observer) {

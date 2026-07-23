@@ -1,8 +1,8 @@
 <template>
-  <div class="mx-auto w-full max-w-[1180px] px-6 pb-10 pt-2">
-    <header class="my-6 flex flex-col items-start gap-2">
-      <h1 class="text-[34px] font-extrabold">{{ t('nav.notice') }}</h1>
-      <p class="text-muted-foreground">{{ t('notice.subtitle') }}</p>
+  <div class="mx-auto w-full max-w-[1040px] px-4 pb-10 pt-2 sm:px-6">
+    <header class="relative my-6 overflow-hidden rounded-[26px] border bg-card px-6 py-8 sm:px-8">
+      <div class="relative"><p class="text-xs font-extrabold uppercase tracking-[.14em] text-primary">{{ t('storefront.updateEyebrow') }}</p><h1 class="mt-2 text-[34px] font-extrabold">{{ t('nav.notice') }}</h1><p class="mt-3 text-muted-foreground">{{ t('notice.subtitle') }}</p></div>
+      <Bell class="absolute -bottom-8 -right-2 h-36 w-36 text-primary opacity-[.08]" />
     </header>
 
     <!-- Loading -->
@@ -17,7 +17,7 @@
           v-for="notice in notices"
           :key="notice.id"
           type="button"
-          class="group flex w-full items-center gap-[18px] rounded-lg border bg-card px-[22px] py-[18px] text-left transition hover:-translate-x-0.5 hover:border-hairline-strong hover:shadow-[var(--shadow)]"
+          class="group flex w-full items-center gap-[18px] rounded-2xl border bg-card px-[22px] py-[18px] text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[var(--shadow)]"
           @click="goToNotice(notice.slug)"
         >
           <div

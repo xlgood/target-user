@@ -55,6 +55,7 @@ import { computed, ref, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AlarmClock, ChevronRight, Package, ShoppingCart, XCircle, Zap } from 'lucide-vue-next'
 import { getFirstImageUrl, getImageUrl, isProviderCatalogImage } from '../../../utils/image'
+import { categoryImagePath } from '../../../utils/catalog'
 import { useLocalized, useProductLabels } from '../../../composables/useProduct'
 
 const props = withDefaults(defineProps<{ product: any; index?: number }>(), { index: 0 })
@@ -85,8 +86,7 @@ const coverImage = computed(() => {
   if (imageErrored.value) return ''
   const primary = getFirstImageUrl(props.product?.images)
   if (primary) return primary
-  const icon = props.product?.category?.icon
-  return icon ? getImageUrl(icon) : ''
+  return getImageUrl(categoryImagePath(props.product?.category))
 })
 
 const stockPill = computed<{ tone: string; icon: Component; label: string }>(() => {

@@ -1,8 +1,8 @@
 <template>
-  <div class="mx-auto w-full max-w-[1180px] px-6 pb-10 pt-2">
-    <header class="mt-6 flex flex-col items-start gap-2">
-      <h1 class="text-[34px] font-extrabold">{{ t('nav.blog') }}</h1>
-      <p class="text-muted-foreground">{{ t('blog.subtitle') }}</p>
+  <div class="mx-auto w-full max-w-[1240px] px-4 pb-10 pt-2 sm:px-6">
+    <header class="relative mt-6 overflow-hidden rounded-[26px] border bg-card px-6 py-8 sm:px-8">
+      <div class="relative"><p class="text-xs font-extrabold uppercase tracking-[.14em] text-primary">{{ t('storefront.updateEyebrow') }}</p><h1 class="mt-2 text-[34px] font-extrabold">{{ t('nav.blog') }}</h1><p class="mt-3 text-muted-foreground">{{ t('blog.subtitle') }}</p></div>
+      <BookOpen class="absolute -bottom-8 -right-2 h-36 w-36 text-primary opacity-[.08]" />
     </header>
 
     <div class="relative my-7 max-w-[520px]">
@@ -22,7 +22,7 @@
         <RouterLink
           v-for="post in posts"
           :key="post.id"
-          class="group flex flex-col rounded-xl border bg-card p-[22px] shadow-sm transition hover:-translate-y-1 hover:border-hairline-strong hover:shadow-[var(--shadow)]"
+          class="group flex flex-col rounded-2xl border bg-card p-[22px] shadow-sm transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-[var(--shadow)]"
           :to="`/blog/${post.slug}`"
         >
           <div v-if="post.thumbnail" class="-mx-[22px] -mt-[22px] mb-4 h-[168px] overflow-hidden rounded-t-xl">

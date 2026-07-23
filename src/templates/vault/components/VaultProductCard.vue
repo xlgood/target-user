@@ -1,15 +1,14 @@
 <template>
-  <RouterLink :to="`/products/${product.slug}`" class="flex h-full flex-col gap-2.5 rounded-lg border bg-card p-3 text-left transition hover:-translate-y-[3px] hover:border-hairline-strong hover:shadow-[var(--shadow)]" :class="{ 'opacity-[0.74]': soldOut }">
+  <RouterLink :to="`/products/${product.slug}`" class="flex h-full flex-col gap-3 rounded-2xl border bg-card p-3.5 text-left transition hover:-translate-y-[3px] hover:border-primary/40 hover:shadow-[var(--shadow)]" :class="{ 'opacity-[0.74]': soldOut }">
     <div class="flex flex-col items-stretch gap-[11px]">
       <span
-        class="relative grid h-[152px] w-full flex-none place-items-center overflow-hidden rounded-[13px] will-change-transform after:absolute after:inset-0 after:bg-[radial-gradient(130%_80%_at_78%_14%,rgba(255,255,255,0.26),transparent_56%)]"
+        class="relative grid h-[166px] w-full flex-none place-items-center overflow-hidden rounded-xl will-change-transform after:absolute after:inset-0 after:bg-[radial-gradient(130%_80%_at_78%_14%,rgba(255,255,255,0.26),transparent_56%)]"
         :class="coverClass"
       >
         <img v-if="coverImage" :src="coverImage" :alt="title" loading="lazy" class="absolute inset-0 h-full w-full" :class="isProviderCatalogImage(coverImage) ? 'object-contain' : 'object-cover'" @error="imageErrored = true" />
         <Package v-else class="relative z-[1] h-[58px] w-[58px] text-white" />
-        <!-- 商家标签浮层 -->
-        <div v-if="!soldOut && product.tags && product.tags.length" class="absolute right-1.5 top-1.5 z-[3] flex max-w-[80%] flex-wrap justify-end gap-1">
-          <span v-for="(tag, i) in product.tags.slice(0, 2)" :key="i" class="inline-flex max-w-full items-center truncate rounded-md border border-white/25 bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm">{{ tag }}</span>
+        <div class="absolute left-2 top-2 z-[3]">
+          <span class="inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/45 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-sm"><component :is="catalogIcon" class="h-3 w-3" />{{ catalogLabel }}</span>
         </div>
       </span>
       <div class="flex min-w-0 flex-col gap-0.5 px-1">
@@ -18,11 +17,11 @@
       </div>
     </div>
 
-    <!-- 属性徽章：交付方式 · 购买类型 · 库存 -->
+    <!-- Attribute badges remain secondary to the catalog-specific task. -->
     <div class="mx-1 flex flex-wrap items-center gap-1.5">
       <span class="inline-flex items-center gap-1 rounded-full bg-[color:var(--teal-soft)] px-2 py-0.5 text-[11px] font-semibold text-[color:var(--teal-strong)]">
-        <component :is="product.fulfillment_type === 'auto' ? Zap : Pencil" class="h-3 w-3" />
-        {{ getFulfillmentTypeLabel(product.fulfillment_type) }}
+        <component :is="formIcon" class="h-3 w-3" />
+        {{ formLabel }}
       </span>
       <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="product.purchase_type === 'guest' ? 'bg-[color:var(--gold-soft)] text-[color:var(--gold-strong)]' : 'bg-[color:var(--teal-soft)] text-[color:var(--teal-strong)]'">
         <component :is="product.purchase_type === 'guest' ? UserPlus : Lock" class="h-3 w-3" />
@@ -63,8 +62,9 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AlarmClock, Lock, Package, Pencil, UserPlus, XCircle, Zap } from 'lucide-vue-next'
+import { AlarmClock, KeyRound, Link, Lock, Package, Pencil, ShieldCheck, TrendingUp, UserPlus, XCircle, Zap } from 'lucide-vue-next'
 import { getFirstImageUrl, getImageUrl, isProviderCatalogImage } from '../../../utils/image'
+import { categoryImagePath } from '../../../utils/catalog'
 import { useLocalized, useProductLabels } from '../../../composables/useProduct'
 
 const props = withDefaults(defineProps<{ product: any; index?: number }>(), { index: 0 })
@@ -90,6 +90,12 @@ const coverClass = computed(() => covers[(props.index ?? 0) % covers.length])
 
 const title = computed(() => getLocalizedText(props.product?.title))
 const categoryName = computed(() => getLocalizedText(props.product?.category?.name))
+const isAccount = computed(() => props.product?.catalog === 'accounts')
+const isService = computed(() => props.product?.catalog === 'services')
+const catalogLabel = computed(() => isAccount.value ? t('storefront.catalog.accounts') : isService.value ? t('storefront.catalog.services') : t('nav.products'))
+const catalogIcon = computed(() => isAccount.value ? ShieldCheck : isService.value ? TrendingUp : Package)
+const formIcon = computed(() => isAccount.value ? KeyRound : isService.value ? Link : Pencil)
+const formLabel = computed(() => isAccount.value ? t('storefront.list.accountForm') : isService.value ? t('storefront.list.serviceForm') : getFulfillmentTypeLabel(props.product?.fulfillment_type))
 const soldOut = computed(() => isSoldOut(props.product))
 const stockPending = computed(() => isStockPending(props.product))
 const promo = computed(() => hasPromotionPrice(props.product))
@@ -99,8 +105,7 @@ const coverImage = computed(() => {
   if (imageErrored.value) return ''
   const primary = getFirstImageUrl(props.product?.images)
   if (primary) return primary
-  const icon = props.product?.category?.icon
-  return icon ? getImageUrl(icon) : ''
+  return getImageUrl(categoryImagePath(props.product?.category))
 })
 
 const stockPill = computed<{ tone: string; icon: Component; label: string }>(() => {
