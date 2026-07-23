@@ -15,13 +15,17 @@
           :value="fieldValue(field.key)"
           rows="5"
           class="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          :class="fieldError(field) ? 'border-destructive' : ''"
           :placeholder="fieldPlaceholder(field)"
+          :aria-invalid="Boolean(fieldError(field))"
           @input="setField(field.key, ($event.target as HTMLTextAreaElement).value)"
         />
         <select
           v-else-if="field.type === 'select'"
           :value="fieldValue(field.key)"
           class="h-10 rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          :class="fieldError(field) ? 'border-destructive' : ''"
+          :aria-invalid="Boolean(fieldError(field))"
           @change="setField(field.key, ($event.target as HTMLSelectElement).value)"
         >
           <option value="">{{ t('checkout.manualFormSelectPlaceholder') }}</option>
@@ -32,9 +36,12 @@
           :type="inputType(field.type)"
           :value="fieldValue(field.key)"
           class="h-10 rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          :class="fieldError(field) ? 'border-destructive' : ''"
           :placeholder="fieldPlaceholder(field)"
+          :aria-invalid="Boolean(fieldError(field))"
           @input="setField(field.key, ($event.target as HTMLInputElement).value)"
         />
+        <span v-if="fieldError(field)" class="text-xs font-normal text-destructive">{{ fieldError(field) }}</span>
         <span v-if="fieldHelp(field)" class="text-xs font-normal leading-5 text-muted-foreground">
           {{ fieldHelp(field) }}
         </span>
@@ -51,6 +58,7 @@ import { useLocalized } from '../../composables/useProduct'
 const props = defineProps<{
   fields: any[]
   modelValue: Record<string, any>
+  fieldErrors?: Record<string, string>
   commentQuantity: number
 }>()
 
@@ -67,6 +75,7 @@ const fieldLabel = (field: any) => getLocalizedText(field?.label) || String(fiel
 const fieldPlaceholder = (field: any) => getLocalizedText(field?.placeholder) || String(field?.placeholder || '')
 const fieldHelp = (field: any) => getLocalizedText(field?.help) || String(field?.help || '')
 const fieldValue = (key: string) => props.modelValue?.[key] ?? ''
+const fieldError = (field: any) => props.fieldErrors?.[String(field?.key || '').trim()] || ''
 const inputType = (type: string) => ({ number: 'number', email: 'email', phone: 'tel', url: 'url' }[type] || 'text')
 
 const setField = (key: string, value: string) => {

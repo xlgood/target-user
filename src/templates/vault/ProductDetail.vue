@@ -156,7 +156,7 @@
           </div>
 
           <div v-if="checkoutFields.length" class="my-5">
-            <ProductPurchaseForm v-model="purchaseFormData" :fields="checkoutFields" :comment-quantity="commentQuantity" />
+            <ProductPurchaseForm v-model="purchaseFormData" :fields="checkoutFields" :field-errors="purchaseFormFieldErrors" :comment-quantity="commentQuantity" />
           </div>
 
           <RouterLink v-if="showAccountAccessGuide" to="/guides/account-access" class="my-5 flex rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/10">
@@ -295,7 +295,7 @@ const {
   hasPromotionRules, getPromotionRules,
   formatPromotionRule, formatWholesaleTier, formatRelatedPostDate, normalizeSkuId,
   loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning, purchaseFormData,
-  activeSkus, selectedSku, checkoutFields, showAccountAccessGuide,
+  activeSkus, selectedSku, checkoutFields, showAccountAccessGuide, purchaseFormFieldErrors,
   selectedSkuMemberPrice, hasMemberPrice,
   hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,
   selectedSkuWholesaleRules,

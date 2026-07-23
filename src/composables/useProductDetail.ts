@@ -13,6 +13,7 @@ import { debounceAsync } from '../utils/debounce'
 import { buildSkuDisplayText, normalizeSkuId } from '../utils/sku'
 import { resolveSkuAvailableStock, resolveSkuStockDisplay, type PublicStockDisplay } from '../utils/publicStock'
 import { countNonEmptyLines } from '../utils/commentQuantity'
+import { validatePurchaseFields, type PurchaseFieldValidationError } from '../utils/productPurchaseFieldValidation'
 import { useLocalized, useProductLabels } from './useProduct'
 import { toast } from './useToast'
 
@@ -69,15 +70,33 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     return fields.filter((field: any) => String(field?.key || '').trim() && String(field?.label || field?.key || '').trim())
   })
   const showAccountAccessGuide = computed(() => {
-    const slug = String(product.value?.category?.slug || '').trim().toLowerCase()
-    return ['platform-outlook', 'platform-hotmail', 'platform-overseas-email'].includes(slug)
+    const category = product.value?.category || {}
+    const slug = String(category?.slug || '').trim().toLowerCase()
+    if (['platform-outlook', 'platform-hotmail', 'platform-overseas-email'].includes(slug)) return true
+    const accountText = [
+      getLocalizedText(category?.name),
+      getLocalizedText(product.value?.title),
+    ].join(' ').toLowerCase()
+    return /(outlook|hotmail|邮箱|電郵|email|mailbox)/i.test(accountText)
   })
-  const hasMissingRequiredPurchaseField = computed(() => checkoutFields.value.some((field: any) => {
-    if (!field?.required) return false
-    const value = purchaseFormData.value[String(field.key || '').trim()]
-    if (field.type === 'checkbox') return !Array.isArray(value) || value.length === 0
-    return !String(value ?? '').trim()
-  }))
+  const purchaseFieldValidation = computed(() => validatePurchaseFields(checkoutFields.value, purchaseFormData.value))
+  const hasMissingRequiredPurchaseField = computed(() => Object.values(purchaseFieldValidation.value).includes('required'))
+  const purchaseFormFieldErrors = computed<Record<string, string>>(() => {
+    const errors: Record<string, string> = {}
+    for (const field of checkoutFields.value) {
+      const key = String(field?.key || '').trim()
+      const error = purchaseFieldValidation.value[key] as PurchaseFieldValidationError | undefined
+      if (!error || error === 'required') continue
+      const name = getLocalizedText(field?.label) || key
+      if (error === 'option_invalid') errors[key] = t('checkout.manualFormFieldOptionInvalid', { name })
+      else if (error === 'number_invalid') errors[key] = t('checkout.manualFormFieldNumberInvalid', { name })
+      else if (error === 'number_range') errors[key] = t('checkout.manualFormFieldNumberRange', { name })
+      else if (error === 'max_length') errors[key] = t('checkout.manualFormFieldMaxLength', { name, max: field?.max_len })
+      else errors[key] = t('checkout.manualFormFieldInvalid', { name })
+    }
+    return errors
+  })
+  const hasInvalidPurchaseField = computed(() => Object.keys(purchaseFormFieldErrors.value).length > 0)
   const formatRelatedPostDate = (dateString: string) => {
     if (!dateString) return ''
     const date = new Date(dateString)
@@ -344,6 +363,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     if (stockBelowMinPurchase.value) return false
     if (usesCommentQuantity.value && commentQuantity.value < quantityEffectiveMin.value) return false
     if (hasMissingRequiredPurchaseField.value) return false
+    if (hasInvalidPurchaseField.value) return false
     return true
   })
   const cannotPurchaseReason = computed(() => {
@@ -356,6 +376,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
       return t('productDetail.commentQuantityBelowMinimum', { count: quantityEffectiveMin.value })
     }
     if (hasMissingRequiredPurchaseField.value) return t('productDetail.requiredInformationMissing')
+    if (hasInvalidPurchaseField.value) return t('productDetail.requiredInformationInvalid')
     if (canPurchase.value) return ''
     return t('productDetail.stockUnavailable')
   })
@@ -721,7 +742,7 @@ export function useProductDetail(options: { onLoaded?: () => void } = {}) {
     normalizeSkuId,
     // 状态
     loading, product, relatedPosts, currentImage, selectedSkuId, quantity, purchaseWarning, purchaseFormData,
-    activeSkus, selectedSku, checkoutFields, showAccountAccessGuide, hasMissingRequiredPurchaseField,
+    activeSkus, selectedSku, checkoutFields, showAccountAccessGuide, hasMissingRequiredPurchaseField, purchaseFormFieldErrors,
     // 价格计算
     selectedSkuMemberPrice, hasMemberPrice,
     hasSelectedSkuWholesalePrice, selectedSkuWholesaleFinalIsMember, selectedSkuWholesaleFinalPrice,
